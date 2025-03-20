@@ -1,8 +1,9 @@
 from agno.agent import Agent
 from agno.models.groq import Groq
 from agno.vectordb.lancedb import LanceDb, SearchType
-from agno.embedder.huggingface import HuggingfaceCustomEmbedder
+# from agno.embedder.huggingface import HuggingfaceCustomEmbedder
 from agno.knowledge.pdf import PDFKnowledgeBase
+from agno.embedder.sentence_transformer import SentenceTransformerEmbedder
 import os
 import json
 from typing import Dict, Any, Optional, Tuple, Union, List
@@ -17,7 +18,6 @@ class SentimentAnalyzer:
         self,
         pdf_path: str,
         groq_api_key: str,
-        huggingface_api_key: str,
         model_id: str = "llama-3.3-70b-versatile",
         table_name: str = "sentiment_guidelines",
         vector_db_path: str = "tmp/lancedb",
@@ -48,7 +48,7 @@ class SentimentAnalyzer:
                 table_name=table_name,
                 uri=vector_db_path,
                 search_type=SearchType.vector,
-                embedder=HuggingfaceCustomEmbedder(api_key=huggingface_api_key),
+                embedder = SentenceTransformerEmbedder(),
             ),
         )
         
@@ -255,13 +255,11 @@ class SentimentAnalyzer:
 if __name__ == "__main__":
     # Initialize the analyzer with your API keys
     grok_key = os.environ.get("GROQ_API_KEY", "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")
-    huggingface_key = os.environ.get("HF_API_KEY", "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")
     
     # Create the sentiment analyzer
     analyzer = SentimentAnalyzer(
         pdf_path="Sentiment.pdf",  # PDF with sentiment guidelines
         groq_api_key=grok_key,
-        huggingface_api_key=huggingface_key,
         load_knowledge=True,  # Set to False after the first run
         sentiment_scale=(-5, 5)  # Use a -5 to 5 scoring scale
     )

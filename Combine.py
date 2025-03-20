@@ -4,9 +4,8 @@
 from Question_Response_Agent import QuestionAnswerAgent
 
 qa_agent = QuestionAnswerAgent(
-    pdf_path="psychometric_questions.pdf",
-    groq_api_key="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",
-    huggingface_api_key="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"
+    pdf_path="Questions.pdf",
+    groq_api_key="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",
 )
 
 # Get a single question-answer interaction
@@ -16,9 +15,8 @@ qa_result = qa_agent.run_single_interaction()
 from Sentiment_Analyzer import SentimentAnalyzer
 
 analyzer = SentimentAnalyzer(
-    pdf_path="sentiment_analysis_guidelines.pdf",
-    groq_api_key="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",
-    huggingface_api_key="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"
+    pdf_path="Sentiment.pdf",
+    groq_api_key="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",
 )
 
 # Analyze the sentiment of the user's response

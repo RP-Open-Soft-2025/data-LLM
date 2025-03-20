@@ -1,7 +1,8 @@
 from agno.agent import Agent
 from agno.models.groq import Groq
 from agno.vectordb.lancedb import LanceDb, SearchType
-from agno.embedder.huggingface import HuggingfaceCustomEmbedder
+# from agno.embedder.huggingface import HuggingfaceCustomEmbedder
+from agno.embedder.sentence_transformer import SentenceTransformerEmbedder
 from agno.knowledge.pdf import PDFKnowledgeBase
 import os
 
@@ -15,7 +16,6 @@ class QuestionAnswerAgent:
         self,
         pdf_path: str,
         groq_api_key: str,
-        huggingface_api_key: str,
         model_id: str = "llama-3.3-70b-versatile",
         table_name: str = "psychometric_questions",
         vector_db_path: str = "tmp/lancedb",
@@ -27,7 +27,6 @@ class QuestionAnswerAgent:
         Args:
             pdf_path: Path to the PDF containing psychometric questions
             groq_api_key: API key for Groq
-            huggingface_api_key: API key for Huggingface
             model_id: Model ID to use for the Groq LLM
             table_name: Name of the table to store embeddings
             vector_db_path: Path to store the vector database
@@ -35,14 +34,14 @@ class QuestionAnswerAgent:
         """
         self.pdf_path = pdf_path
         
-        # Initialize the knowledge base
+        # Initialize the knowledge base with SentenceTransformerEmbedder
         self.knowledge_base = PDFKnowledgeBase(
             path=pdf_path,
             vector_db=LanceDb(
                 table_name=table_name,
                 uri=vector_db_path,
                 search_type=SearchType.vector,
-                embedder=HuggingfaceCustomEmbedder(api_key=huggingface_api_key),
+                embedder=SentenceTransformerEmbedder(),  # Changed this line
             ),
         )
         
@@ -103,13 +102,11 @@ class QuestionAnswerAgent:
 if __name__ == "__main__":
     # Initialize the agent with your API keys
     grok_key = os.environ.get("GROQ_API_KEY", "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")
-    huggingface_key = os.environ.get("HF_API_KEY", "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")
     
     # Create the agent
     qa_agent = QuestionAnswerAgent(
         pdf_path="Questions.pdf",
         groq_api_key=grok_key,
-        huggingface_api_key=huggingface_key,
         load_knowledge=True  # Set to False after the first run
     )
     
