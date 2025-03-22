@@ -12,7 +12,7 @@ qa_agent = QuestionAnswerAgent(
 qa_result = qa_agent.run_single_interaction()
 
 # 2. Pass the user's response to the sentiment analyzer
-from Sentiment_Analyzer import SentimentAnalyzer
+from AgnoAI.Sentiment_Analyzer import SentimentAnalyzer
 
 analyzer = SentimentAnalyzer(
     pdf_path="Sentiment.pdf",
