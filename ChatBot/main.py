@@ -5,7 +5,7 @@ try:
     from knowledge_base import KnowledgeBaseManager
 except TypeError:
     print("Using simple knowledge base manager without chunking parameters...")
-    from knowledge_base_simple import KnowledgeBaseManager
+    from knowledge_base import KnowledgeBaseManager
 
 from counseling_agent import CounselingAgent
 from conversation_manager import ConversationManager
