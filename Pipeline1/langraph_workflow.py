@@ -136,110 +136,13 @@ def create_employee_analysis_graph():
     graph.add_node("consolidate_reports", consolidate_reports)
     
     # Add conditional edges from each node to determine next step
-    graph.add_conditional_edges(
-        "process_activity",
-        determine_next_step,
-        {
-            "process_activity": "process_activity",
-            "process_leave": "process_leave",
-            "process_onboarding": "process_onboarding",
-            "process_performance": "process_performance",
-            "process_rewards": "process_rewards",
-            "process_vibemeter": "process_vibemeter",
-            "consolidate_reports": "consolidate_reports",
-            "end": END
-        }
-    )
-    
-    graph.add_conditional_edges(
-        "process_leave",
-        determine_next_step,
-        {
-            "process_activity": "process_activity",
-            "process_leave": "process_leave",
-            "process_onboarding": "process_onboarding",
-            "process_performance": "process_performance",
-            "process_rewards": "process_rewards",
-            "process_vibemeter": "process_vibemeter",
-            "consolidate_reports": "consolidate_reports",
-            "end": END
-        }
-    )
-    
-    graph.add_conditional_edges(
-        "process_onboarding",
-        determine_next_step,
-        {
-            "process_activity": "process_activity",
-            "process_leave": "process_leave",
-            "process_onboarding": "process_onboarding",
-            "process_performance": "process_performance",
-            "process_rewards": "process_rewards",
-            "process_vibemeter": "process_vibemeter",
-            "consolidate_reports": "consolidate_reports",
-            "end": END
-        }
-    )
-    
-    graph.add_conditional_edges(
-        "process_performance",
-        determine_next_step,
-        {
-            "process_activity": "process_activity",
-            "process_leave": "process_leave",
-            "process_onboarding": "process_onboarding",
-            "process_performance": "process_performance",
-            "process_rewards": "process_rewards",
-            "process_vibemeter": "process_vibemeter",
-            "consolidate_reports": "consolidate_reports",
-            "end": END
-        }
-    )
-    
-    graph.add_conditional_edges(
-        "process_rewards",
-        determine_next_step,
-        {
-            "process_activity": "process_activity",
-            "process_leave": "process_leave",
-            "process_onboarding": "process_onboarding",
-            "process_performance": "process_performance",
-            "process_rewards": "process_rewards",
-            "process_vibemeter": "process_vibemeter",
-            "consolidate_reports": "consolidate_reports",
-            "end": END
-        }
-    )
-    
-    graph.add_conditional_edges(
-        "process_vibemeter",
-        determine_next_step,
-        {
-            "process_activity": "process_activity",
-            "process_leave": "process_leave",
-            "process_onboarding": "process_onboarding",
-            "process_performance": "process_performance",
-            "process_rewards": "process_rewards",
-            "process_vibemeter": "process_vibemeter",
-            "consolidate_reports": "consolidate_reports",
-            "end": END
-        }
-    )
-    
-    graph.add_conditional_edges(
-        "consolidate_reports",
-        determine_next_step,
-        {
-            "process_activity": "process_activity",
-            "process_leave": "process_leave",
-            "process_onboarding": "process_onboarding",
-            "process_performance": "process_performance",
-            "process_rewards": "process_rewards",
-            "process_vibemeter": "process_vibemeter",
-            "consolidate_reports": "consolidate_reports",
-            "end": END
-        }
-    )
+    graph.add_edge("process_activity", "process_leave")
+    graph.add_edge("process_leave", "process_onboarding")
+    graph.add_edge("process_onboarding", "process_performance")
+    graph.add_edge("process_performance", "process_rewards")
+    graph.add_edge("process_rewards", "process_vibemeter")
+    graph.add_edge("process_vibemeter", "consolidate_reports")
+    graph.add_edge("consolidate_reports", END)
     
     # Set the entry point - start with determining next step from initial state
     # This needs to be a node that corresponds to a conditional function
