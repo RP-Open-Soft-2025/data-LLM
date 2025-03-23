@@ -195,7 +195,7 @@ AGENT_10=PromptTemplate.from_template(
     '''You are an expert in detecting performance trends and employee motivation factors.  
 Review the following employee performance and rewards data:  
 
-{employee_performance_rewards_data}  
+{employee_low_performance_rewards_data}  
 
 Using this data, analyze:  
 1. The employee’s performance trajectory over time.  
@@ -257,7 +257,7 @@ AGENT_13=PromptTemplate.from_template(
     '''You are an expert in assessing inefficiencies in employee productivity.  
 Review the following employee performance and activity data:  
 
-{employee_performance_activity_data}  
+{employee_low_performance_high_activity_data}  
 
 Using this data, analyze:  
 1. The employee’s performance ratings over time.  
@@ -318,7 +318,7 @@ AGENT_16=PromptTemplate.from_template(
     '''You are an expert in detecting career stagnation among high-performing employees.  
 Review the following employee performance and promotion data:  
 
-{employee_performance_promotion_data}  
+{employee_high_performance_promotion_data}  
 
 Using this data, analyze:  
 1. The employee’s performance history.  
