@@ -3,8 +3,8 @@
 import json
 import argparse
 from typing import Dict, Any
-from langraph_workflow import employee_analysis_graph
-from models import EmployeeData
+from .langraph_workflow import employee_analysis_graph
+from .models import EmployeeData
 
 def load_employee_data(file_path: str) -> Dict[str, Any]:
     """Load employee data from a JSON file."""
