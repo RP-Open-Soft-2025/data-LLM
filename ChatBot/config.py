@@ -1,7 +1,7 @@
 # Configuration settings for the counseling agent
 
 # API Keys
-GROQ_API_KEY = "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"  # Replace with your actual API key
+GROQ_API_KEY = "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"  # Replace with your actual API key
 
 # Model settings
 MODEL_ID = "llama-3.3-70b-versatile"

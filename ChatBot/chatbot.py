@@ -1,31 +1,19 @@
 import os
-import uuid
-import uvicorn
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, HTTPException, BackgroundTasks, APIRouter
 from pydantic import BaseModel
-import config
+from . import config
 from pathlib import Path
-# Try the updated version first, if it fails, use the simpler version
+
 try:
-    from knowledge_base import KnowledgeBaseManager
+    from .knowledge_base import KnowledgeBaseManager
 except TypeError:
     print("Using simple knowledge base manager without chunking parameters...")
-    from knowledge_base import KnowledgeBaseManager
+    from .knowledge_base import KnowledgeBaseManager
 
-from counseling_agent import CounselingAgent
-from conversation_manager import ConversationManager
+from .counseling_agent import CounselingAgent
+from .conversation_manager import ConversationManager
 
-app = FastAPI(title="Counseling Agent API", description="API for interacting with a counseling agent")
-
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
-)
+router = APIRouter()
 
 # Store active sessions
 active_sessions = {}
@@ -39,6 +27,7 @@ REPORTS_DIR = Path(__file__).parent.parent / "emp_reports"
 
 class SessionRequest(BaseModel):
     employee_id: str
+    session_id: str
 
 class SessionResponse(BaseModel):
     session_id: str
@@ -55,11 +44,14 @@ def setup_system(employee_id: str):
     global kb_manager, counseling_agent
     
     # Check if required files exist
-    if not os.path.exists(config.QUESTIONS_PDF_PATH):
-        raise Exception(f"Error: Questions PDF file not found at {config.QUESTIONS_PDF_PATH}")
+    if not os.path.exists(
+        Path(__file__).parent.parent / "ChatBot" / config.QUESTIONS_PDF_PATH
+    ):
+        raise Exception(f"Error: Questions PDF file not found at {config.QUESTIONS_PDF_PATH} {REPORTS_DIR}")
     
     # Check if employee report exists
     report_path = REPORTS_DIR / f"{employee_id}_report.txt"
+    print(report_path)
     if not report_path.exists():
         raise Exception(f"Error: Employee report not found for ID {employee_id}")
 
@@ -85,10 +77,7 @@ def setup_system(employee_id: str):
         system_prompt=config.CUSTOM_SYSTEM_PROMPT
     )
 
-def initialize_session(employee_id: str, background_tasks: BackgroundTasks):
-    # Generate a unique session ID
-    session_id = str(uuid.uuid4())
-    
+def initialize_session(employee_id: str, session_id: str, background_tasks: BackgroundTasks):
     try:
         # Setup system with employee report
         setup_system(employee_id)
@@ -106,26 +95,21 @@ def initialize_session(employee_id: str, background_tasks: BackgroundTasks):
             "complete": False
         }
         
-        return session_id, first_question
+        return first_question
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.on_event("startup")
-async def startup_event():
-    # Create reports directory if it doesn't exist
-    REPORTS_DIR.mkdir(exist_ok=True)
-
 # health check
-@app.get("/")
+@router.get("/")
 async def health_check():
     return {"status": "ok"}
 
-@app.post("/start_session", response_model=SessionResponse)
+@router.post("/start_session", response_model=SessionResponse)
 async def start_session(request: SessionRequest, background_tasks: BackgroundTasks):
-    session_id, first_message = initialize_session(request.employee_id, background_tasks)
-    return {"session_id": session_id, "message": first_message}
+    first_message = initialize_session(request.employee_id, request.session_id, background_tasks)
+    return {"session_id": request.session_id, "message": first_message}
 
-@app.post("/message", response_model=MessageResponse)
+@router.post("/message", response_model=MessageResponse)
 async def process_message(request: MessageRequest):
     # Check if session exists
     if request.session_id not in active_sessions:
@@ -150,7 +134,7 @@ async def process_message(request: MessageRequest):
     
     return {"message": next_question}
 
-@app.get("/report/{session_id}")
+@router.get("/report/{session_id}")
 async def get_report(session_id: str):
     # Check if session exists
     if session_id not in active_sessions:
@@ -166,6 +150,3 @@ async def get_report(session_id: str):
         raise HTTPException(status_code=404, detail="Report not found")
     
     return {"report": session["report"]}
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
