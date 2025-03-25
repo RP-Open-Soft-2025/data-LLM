@@ -6,7 +6,7 @@ from langgraph.graph import StateGraph, END
 from pydantic import BaseModel
 import json
 
-from agents import (
+from .agents import (
     ActivityAgent, 
     LeaveAgent, 
     OnboardingAgent, 
@@ -15,7 +15,7 @@ from agents import (
     VibemeterAgent,
     ConsolidationAgent
 )
-from models import AgentReport
+from .models import AgentReport
 
 # Define the state for our graph
 class EmployeeAnalysisState(TypedDict):
