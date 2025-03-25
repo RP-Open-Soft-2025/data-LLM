@@ -1,7 +1,7 @@
 from agno.agent import Agent
 from agno.models.groq import Groq
 import re
-from prompt_templates import (
+from .prompt_templates import (
     COUNSELING_SYSTEM_PROMPT,
     QUESTION_GENERATION_PROMPT,
     NEXT_QUESTION_PROMPT,

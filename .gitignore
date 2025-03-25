@@ -130,5 +130,5 @@ dmypy.json
 .idea/
 
 .vercel
-rest.py
-temp.py
+
+.data
