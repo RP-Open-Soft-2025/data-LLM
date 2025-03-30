@@ -8,9 +8,12 @@ from prompt_templates import (
     NEXT_QUESTION_PROMPT,
     REPORT_GENERATION_PROMPT
 )
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 class CounselingAgent:
-    def __init__(self, model_id, api_key, kb_manager, system_prompt=None):
+    def __init__(self, model_id, kb_manager, system_prompt=None):
         """
         Initialize the counseling agent.
         
@@ -31,9 +34,9 @@ class CounselingAgent:
         # )
         # from agno.agent import Agent, RunResponse
 
-
+        os.getenv("OPENAI_API_KEY")
         self.agent = Agent(
-            model=OpenAIChat(id="gpt-4o-mini", api_key=api_key),
+            model=OpenAIChat(id="gpt-4o-mini"),
             markdown=True,
             description=self.system_prompt
         )
