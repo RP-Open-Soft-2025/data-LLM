@@ -2,6 +2,7 @@ from agno.agent import Agent
 from agno.models.groq import Groq
 import re
 from agno.models.openai import OpenAIChat
+from agno.tools.thinking import ThinkingTools
 from prompt_templates import (
     COUNSELING_SYSTEM_PROMPT,
     QUESTION_GENERATION_PROMPT,
@@ -37,6 +38,7 @@ class CounselingAgent:
         os.getenv("OPENAI_API_KEY")
         self.agent = Agent(
             model=OpenAIChat(id="gpt-4o-mini"),
+            tools=[ThinkingTools()],
             markdown=True,
             description=self.system_prompt
         )
