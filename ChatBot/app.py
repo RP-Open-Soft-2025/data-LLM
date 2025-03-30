@@ -1,6 +1,8 @@
 import os
 import config
 import traceback  # Add this import
+from dotenv import load_dotenv
+import os
 # Try the updated version first, if it fails, use the simpler version
 try:
     from knowledge_base import KnowledgeBaseManager
@@ -34,12 +36,16 @@ def main():
         
         # Load knowledge bases - will skip if already loaded
         kb_manager.load_knowledge_bases(force_reload=False)
-        
+        # Import environment variables
+
+        load_dotenv()  # Load environment variables from .env file
         # Initialize counseling agent
         print("Initializing counseling agent...")
+        os.getenv("OPENAI_API_KEY")
+            
         counseling_agent = CounselingAgent(
             model_id=config.MODEL_ID,
-            api_key=config.OPENAI_KEY,
+            # api_key=openai_api_key,
             kb_manager=kb_manager,
             system_prompt=config.CUSTOM_SYSTEM_PROMPT
         )
