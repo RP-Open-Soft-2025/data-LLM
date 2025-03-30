@@ -39,6 +39,7 @@ REPORTS_DIR = Path(__file__).parent.parent / "emp_reports"
 
 class SessionRequest(BaseModel):
     employee_id: str
+    session_id: str
 
 class SessionResponse(BaseModel):
     session_id: str
@@ -85,9 +86,9 @@ def setup_system(employee_id: str):
         system_prompt=config.CUSTOM_SYSTEM_PROMPT
     )
 
-def initialize_session(employee_id: str, background_tasks: BackgroundTasks):
+def initialize_session(employee_id: str, session_id: str, background_tasks: BackgroundTasks):
     # Generate a unique session ID
-    session_id = str(uuid.uuid4())
+    # session_id = str(uuid.uuid4())
     
     try:
         # Setup system with employee report
@@ -122,7 +123,7 @@ async def health_check():
 
 @app.post("/start_session", response_model=SessionResponse)
 async def start_session(request: SessionRequest, background_tasks: BackgroundTasks):
-    session_id, first_message = initialize_session(request.employee_id, background_tasks)
+    session_id, first_message = initialize_session(request.employee_id, request.session_id, background_tasks)
     return {"session_id": session_id, "message": first_message}
 
 @app.post("/message", response_model=MessageResponse)
