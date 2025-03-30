@@ -26,30 +26,6 @@ Create a first open-ended question that is empathetic, supportive, and will help
 Don't give any comment as to it being a first up question, just give the question.
 """
 
-# Prompt template for deciding the next question
-# NEXT_QUESTION_PROMPT = """Here's the recent conversation between a counselor and an employee:
-
-# {conversation_history}
-
-# Based on the conversation and additional information, determine if you should continue the interview or generate the report. Ensure your follow-up question is fresh and does not repeat earlier questions, while incorporating clear empathy.
-
-# EMPLOYEE DATA:
-# {employee_data}
-
-# QUESTION TEMPLATES:
-# {question_templates}
-
-# If you DON'T have enough information yet :
-# 1. First, provide a brief empathetic response (1-2 sentences) that acknowledges the employee's feelings.
-# 2. Then, formulate ONE specific follow-up question that naturally builds on the conversation without repeating previous queries.
-# 3. Your entire response should feel supportive, conversational, and non-redundant.
-# 4. Keep the total response under 350 characters.
-
-# If you DO have enough information or if the user explicitly requests to end the chat:
-# 1. Start your response with "COMPLETE: "
-# 2. Provide a warm, empathetic closing response that acknowledges what they've shared, expresses appreciation for their openness, briefly explains that this information will help create a supportive plan, and clearly states that the conversation has concluded.
-# 3. Ensure that this closing response is distinct and does not include any follow-up questions or prompts for further discussion.
-# """
 NEXT_QUESTION_PROMPT = '''
 Here's the recent conversation between a counselor and an employee: {conversation_history}
 Review the conversation history between the counselor and employee carefully. Analyze:
@@ -65,8 +41,25 @@ EMPLOYEE DATA:
 QUESTION TEMPLATES:
 {question_templates}
 
+For all issues / bad or distressing feeling you have seen in the recent messages by the user, you must have all of the following information:
+### Activating event:
+Son returns home and goes to room without speaking.
+(attach verbatim chat)
+### Belief (what the user thinks about the event):
+He is ungrateful and discourteous.
+(attach verbatim chat)
+### Feeling (what the user feels about the event, usually this comes up first in conversations and you have to inquire further to learn more about the event):
+I am feeling angry. Things are not going well in my family.
+(attach verbatim chat)
+
+Remember that you are empathetic. Think about empathetic words on the latest issue that you are discussing with the user.
+If you haven't said these same things to the user yet, you can say them now. You can also ask the user if they want to talk about it more.
+Try your best to get the user to open up about their feelings and thoughts. You can also ask them if they want to talk about something else.
+
+Note: Having enough information means having all three of these aspects for each and every one of the issues.
+
 Decision Logic
-Based on the employee data, conversation history, and the following criteria, determine to:
+Based on the employee data, conversation history, and the following criteria, determine whether to:
 
 CONTINUE the interview if:
 - Core stressors have not been fully explored: Encourage further sharing only if the user has indicated willingness to elaborate. Avoid repeatedly asking if they have already declined.  
