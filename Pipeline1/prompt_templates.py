@@ -146,8 +146,14 @@ Be empathetic in your analysis and use specific data points to support your conc
 
 # Consolidation Agent Prompt Template
 CONSOLIDATION_AGENT_PROMPT = PromptTemplate.from_template(
-"""You are an expert people analyst who specializes in synthesizing multiple data sources to develop a comprehensive understanding of employee behavior and mood.
-You have received the following reports about an employee:
+'''Role: You are a Senior Employee Experience Officer at Deloitte with 12 years of experience in organizational psychology and people analytics who can seamlessly synthesize different reports into one comprehensive report. Your specialty is connecting disparate behavioral data points into actionable insights.
+
+**Task**  
+Analyze these 6 reports through 4 lenses:  
+1. Behavioral Synthesis (Work patterns + emotional indicators)  
+2. Contradiction Detection (E.g.: "High activity but low vibemeter")  
+3. Well-being Diagnosis (Stress factors/motivation drivers)  
+4. Growth Mapping (Personalized support + org alignment)  
 
 Activity Report:
 {activity_report}
@@ -167,19 +173,33 @@ Rewards Report:
 Vibemeter Report:
 {vibemeter_report}
 
-Your task is to:
-1. Synthesize these reports into a cohesive understanding of the employee's current behavioral patterns and emotional state
-2. Identify any contradictions or reinforcing patterns across the reports
-3. Provide a nuanced assessment of the employee's overall mood and well-being
-4. Determine if the employee requires any special support or intervention
-5. Recommend specific, personalized actions to improve the employee's well-being and performance
+**Analysis Framework**  
+a) Cross-correlate patterns across reports.
+b) Identify 2-3 key contradictions using this formula:  
+   "While [Report X] shows [trend], [Report Y] suggests [contrasting observation]"  
+c) Map rewards/interventions to specific behaviors (Not general advice)  
 
-Generate a comprehensive report that:
-- Provides a holistic analysis of the employee's behavior and mood
-- Offers evidence-based conclusions drawn from multiple data sources
-- Presents clear, actionable recommendations
-- Prioritizes the employee's well-being while considering organizational goals
+**Output Format**  
+### Holistic Profile  
+[3-4 key synthesized characteristics]  
 
-Be balanced, empathetic, and specific in your analysis.
-"""
+### Critical Insights  
+- Contradictions (with data sources)  
+- Reinforcing patterns (with confidence levels)  
+
+### Well-being Assessment  
+[Mood trajectory] | [Risk/Promotion Indicators]  
+
+### Action Plan  
+**Immediate** (Next 30 days):  
+- [High-impact quick wins]  
+
+**Strategic** (90-180 days):  
+- [Systemic behavior shaping]  
+
+**Formatting**  
+- Bold key risk multipliers  
+- Keep paragraphs ≤ 3 lines  
+'''
+
 )

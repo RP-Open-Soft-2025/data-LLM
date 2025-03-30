@@ -2,9 +2,9 @@
 
 from typing import Dict, Any, List, Union
 import json
-from .config import get_llm
-from .models import AgentReport
-from . import prompt_templates
+from config import get_llm
+from models import AgentReport
+import prompt_templates
 
 class BaseAgent:
     """Base agent class with common functionality."""

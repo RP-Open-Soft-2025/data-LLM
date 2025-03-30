@@ -1,7 +1,8 @@
 from agno.agent import Agent
 from agno.models.groq import Groq
 import re
-from .prompt_templates import (
+from agno.models.openai import OpenAIChat
+from prompt_templates import (
     COUNSELING_SYSTEM_PROMPT,
     QUESTION_GENERATION_PROMPT,
     NEXT_QUESTION_PROMPT,
@@ -23,11 +24,20 @@ class CounselingAgent:
         self.kb_manager = kb_manager
         
         # Initialize agent with a description
+        # self.agent = Agent(
+        #     model=Groq(id=model_id, api_key=api_key),
+        #     description=self.system_prompt,
+        #     markdown=True,
+        # )
+        # from agno.agent import Agent, RunResponse
+
+
         self.agent = Agent(
-            model=Groq(id=model_id, api_key=api_key),
-            description=self.system_prompt,
+            model=OpenAIChat(id="gpt-4o-mini", api_key=api_key),
             markdown=True,
+            description=self.system_prompt
         )
+
         
         self.conversation_history = []
         self.is_interview_complete = False
@@ -116,7 +126,7 @@ class CounselingAgent:
             conversation_history=history_text,
             employee_data=employee_data,
             question_templates=question_templates,
-            enough_turns=(counselor_turns >= 5)
+            enough_turns=(counselor_turns >= 3)
         )
         
         # Generate the next question or completion message
