@@ -3,6 +3,7 @@
 # API Keys
 GROQ_API_KEY = "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"  # Replace with your actual API key
 
+
 # Model settings
 MODEL_ID = "llama3-70b-8192"
 
