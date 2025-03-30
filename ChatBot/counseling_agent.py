@@ -136,7 +136,7 @@ class CounselingAgent:
         response = self.agent.run(prompt)
         response_text = self._get_response_text(response)
         
-        if response_text.startswith("COMPLETE:"):
+        if response_text.startswith('"COMPLETE:') or response_text.startswith("COMPLETE:"):
             self.is_interview_complete = True
             return None
         elif response_text.startswith("CONTINUE:"):

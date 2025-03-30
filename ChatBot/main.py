@@ -94,7 +94,7 @@ def setup_system(employee_id: str):
     print("Initializing counseling agent...")
     counseling_agent = CounselingAgent(
         model_id=config.MODEL_ID,
-        api_key=config.GROQ_API_KEY,
+        # api_key=config.GROQ_API_KEY,
         kb_manager=kb_manager,
         system_prompt=config.CUSTOM_SYSTEM_PROMPT,
     )
