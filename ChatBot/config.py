@@ -9,7 +9,7 @@ MODEL_ID = "llama3-70b-8192"
 
 
 # File paths
-EMPLOYEE_DATA_PATH = "emp_reports\EMP9999_report.txt"  # Updated path based on your error message
+EMPLOYEE_DATA_PATH = "emp_reports/EMP9999_report.txt"  # Updated path based on your error message
 QUESTIONS_PDF_PATH = "Questions.pdf"  # Updated path based on your error message
 
 # Database settings
