@@ -106,7 +106,7 @@ def main():
     print(result.get("consolidated_report", {}).get("overall_analysis", "No analysis available"))
     
     # Save to text file for inspection
-    save_report_to_text(result.get("consolidated_report", {}), "employee_report.txt")
+    save_report_to_text(result.get("consolidated_report", {}), "EMP0108_report.txt")
     
     print("\nFull report saved to employee_report.txt")
 
