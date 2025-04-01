@@ -1,106 +1,84 @@
 {
-    "employee_id": "EMP9999",
+    "employee_id": "EMP0108",
     "company_data": {
         "activity": [
             {
-                "Date": "2023-12-12",
-                "Teams_Messages_Sent": 40,
-                "Emails_Sent": 21,
-                "Meetings_Attended": 5,
-                "Work_Hours": 8.16
+                "Date": "2/26/2023",
+                "Teams_Messages_Sent": 48,
+                "Emails_Sent": 23,
+                "Meetings_Attended": 9,
+                "Work_Hours": 9.58
             }
         ],
         "leave": [
             {
-                "Leave_Type": "Casual Leave",
-                "Leave_Days": 10,
-                "Leave_Start_Date": "2023-06-01",
-                "Leave_End_Date": "2023-06-02"
-            },
-            {
-                "Leave_Type": "Unpaid Leave",
-                "Leave_Days": 6,
-                "Leave_Start_Date": "2023-04-14",
-                "Leave_End_Date": "2023-04-15"
-            },
-            {
-                "Leave_Type": "Casual Leave",
-                "Leave_Days": 10,
-                "Leave_Start_Date": "2023-09-24",
-                "Leave_End_Date": "2023-09-25"
-            },
-            {
-                "Leave_Type": "Unpaid Leave",
-                "Leave_Days": 4,
-                "Leave_Start_Date": "2023-10-19",
-                "Leave_End_Date": "2023-10-20"
+                "Leave_Type": "Annual Leave",
+                "Leave_Days": 5,
+                "Leave_Start_Date": "7/17/2023",
+                "Leave_End_Date": "7/18/2023"
             }
         ],
         "onboarding": [
             {
-                "Joining_Date": "2023-02-28",
-                "Onboarding_Feedback": "Excellent",
+                "Joining_Date": "2023-05-13",
+                "Onboarding_Feedback": "Poor",
                 "Mentor_Assigned": false,
-                "Initial_Training_Completed": false
-            },
-            {
-                "Joining_Date": "2024-02-05",
-                "Onboarding_Feedback": "Excellent",
-                "Mentor_Assigned": false,
-                "Initial_Training_Completed": false
+                "Initial_Training_Completed": true
             }
-        ], 
+        ],
         "performance": [
             {
-                "Review_Period": "H2 2023",
-                "Performance_Rating": 1,
+                "Review_Period": "Annual 2023",
+                "Performance_Rating": 4,
+                "Manager_Feedback": "Needs Improvement",
+                "Promotion_Consideration": true
+            },
+            {
+                "Review_Period": "Annual 2023",
+                "Performance_Rating": 2,
                 "Manager_Feedback": "Meets Expectations",
                 "Promotion_Consideration": false
             },
             {
                 "Review_Period": "H2 2023",
-                "Performance_Rating": 1,
+                "Performance_Rating": 4,
                 "Manager_Feedback": "Exceeds Expectations",
                 "Promotion_Consideration": false
+            },
+            {
+                "Review_Period": "Annual 2023",
+                "Performance_Rating": 4,
+                "Manager_Feedback": "Needs Improvement",
+                "Promotion_Consideration": false
+            },
+            {
+                "Review_Period": "Annual 2023",
+                "Performance_Rating": 4,
+                "Manager_Feedback": "Meets Expectations",
+                "Promotion_Consideration": true
+            },
+            {
+                "Review_Period": "H1 2023",
+                "Performance_Rating": 1,
+                "Manager_Feedback": "Exceeds Expectations",
+                "Promotion_Consideration": true
             }
         ],
         "rewards": [
             {
-                "Award_Type": "Best Team Player",
-                "Award_Date": "2023-02-06",
-                "Reward_Points": 352
-            },
-            {
-                "Award_Type": "Star Performer",
-                "Award_Date": "2023-03-29",
-                "Reward_Points": 160
-            },
-            {
-                "Award_Type": "Innovation Award",
-                "Award_Date": "2024-02-01",
-                "Reward_Points": 76
-            },
-            {
-                "Award_Type": "Best Team Player",
-                "Award_Date": "2024-01-24",
-                "Reward_Points": 409
-            },
-            {
-                "Award_Type": "Star Performer",
-                "Award_Date": "2024-04-10",
-                "Reward_Points": 314
+                "Award_Type": "Leadership Excellence",
+                "Award_Date": "2023-05-17",
+                "Reward_Points": 309
             }
         ],
         "vibemeter": [
             {
-                "Response_Date": "2023-08-09",
-                "Vibe_Score": 4,
-                "Emotion_Zone": "Leaning to Sad Zone"
+                "Response_Date": "12-03-2024",
+                "Vibe_Score": 5
             },
             {
-                "Response_Date": "2023-10-04",
-                "Vibe_Score": 3,
-                "Emotion_Zone": "Neutral Zone (OK)"
+                "Response_Date": "04-05-2024",
+                "Vibe_Score": 4
             }
         ]
     }
