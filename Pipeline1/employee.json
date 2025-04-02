@@ -1,84 +1,56 @@
 {
-    "employee_id": "EMP0108",
+    "employee_id": "EMP0136",
     "company_data": {
         "activity": [
             {
-                "Date": "2/26/2023",
-                "Teams_Messages_Sent": 48,
-                "Emails_Sent": 23,
-                "Meetings_Attended": 9,
-                "Work_Hours": 9.58
+                "Date": "11/22/2023",
+                "Teams_Messages_Sent": 7,
+                "Emails_Sent": 5,
+                "Meetings_Attended": 8,
+                "Work_Hours": 4.98
             }
         ],
         "leave": [
             {
-                "Leave_Type": "Annual Leave",
-                "Leave_Days": 5,
-                "Leave_Start_Date": "7/17/2023",
-                "Leave_End_Date": "7/18/2023"
+                "Leave_Type": "Sick Leave",
+                "Leave_Days": 6,
+                "Leave_Start_Date": "5/2/2023",
+                "Leave_End_Date": "5/3/2023"
             }
         ],
         "onboarding": [
             {
-                "Joining_Date": "2023-05-13",
-                "Onboarding_Feedback": "Poor",
+                "Joining_Date": "2023-10-08",
+                "Onboarding_Feedback": "Good",
                 "Mentor_Assigned": false,
-                "Initial_Training_Completed": true
+                "Initial_Training_Completed": false
             }
         ],
         "performance": [
             {
-                "Review_Period": "Annual 2023",
-                "Performance_Rating": 4,
-                "Manager_Feedback": "Needs Improvement",
-                "Promotion_Consideration": true
-            },
-            {
-                "Review_Period": "Annual 2023",
-                "Performance_Rating": 2,
-                "Manager_Feedback": "Meets Expectations",
-                "Promotion_Consideration": false
-            },
-            {
                 "Review_Period": "H2 2023",
-                "Performance_Rating": 4,
-                "Manager_Feedback": "Exceeds Expectations",
-                "Promotion_Consideration": false
-            },
-            {
-                "Review_Period": "Annual 2023",
-                "Performance_Rating": 4,
+                "Performance_Rating": 3,
                 "Manager_Feedback": "Needs Improvement",
-                "Promotion_Consideration": false
-            },
-            {
-                "Review_Period": "Annual 2023",
-                "Performance_Rating": 4,
-                "Manager_Feedback": "Meets Expectations",
                 "Promotion_Consideration": true
             },
             {
                 "Review_Period": "H1 2023",
                 "Performance_Rating": 1,
-                "Manager_Feedback": "Exceeds Expectations",
-                "Promotion_Consideration": true
+                "Manager_Feedback": "Needs Improvement",
+                "Promotion_Consideration": false
             }
         ],
         "rewards": [
             {
                 "Award_Type": "Leadership Excellence",
-                "Award_Date": "2023-05-17",
-                "Reward_Points": 309
+                "Award_Date": "2023-12-25",
+                "Reward_Points": 359
             }
         ],
         "vibemeter": [
             {
-                "Response_Date": "12-03-2024",
-                "Vibe_Score": 5
-            },
-            {
-                "Response_Date": "04-05-2024",
-                "Vibe_Score": 4
+                "Response_Date": "23-02-2024",
+                "Vibe_Score": 1
             }
         ]
     }
