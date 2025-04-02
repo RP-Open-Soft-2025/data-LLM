@@ -2,7 +2,10 @@
 
 import os
 from langchain_groq import ChatGroq
-
+from langchain_openai import ChatOpenAI
+from openai import OpenAI
+from dotenv import load_dotenv
+load_dotenv()
 # Default model configuration
 DEFAULT_MODEL = "llama3-70b-8192"  # You can choose a suitable Groq model
 DEFAULT_TEMPERATURE = 0.2
@@ -13,11 +16,11 @@ def get_llm(model_name=None, temperature=None):
     model = model_name or os.getenv("GROQ_MODEL", DEFAULT_MODEL)
     temp = temperature if temperature is not None else float(os.getenv("LLM_TEMPERATURE", DEFAULT_TEMPERATURE))
     
-    return ChatGroq(
-        model=model,
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    model='gpt-4o-mini'
+    return ChatOpenAI(
+        api_key=os.getenv("OPENAI_API_KEY"),
+        model_name=model,
         temperature=temp,
-        max_tokens=None,
-        timeout=None,
-        max_retries=2,
-        api_key=os.getenv("GROQ_API_KEY", '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'),
+        max_retries=2
     )
