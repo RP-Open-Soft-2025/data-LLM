@@ -1,0 +1,26 @@
+runtime: custom  # Use Docker (custom runtime)
+env: flex  # Flexible environment for Docker containers
+
+service: default  # Default App Engine service
+
+entrypoint: uvicorn main:app --host 0.0.0.0 --port 8080
+
+env_variables:
+  DATABASE_URL: "your-database-url"
+  SECRET_KEY: "your-secret-key"
+  SENDER_EMAIL: "your-email"
+  SENDER_PASSWORD: "your-email-password"
+  EMAIL_TEMPLATE: "your-email-template-url"
+
+manual_scaling:
+  instances: 2  # Adjust based on traffic
+
+resources:
+  cpu: 1
+  memory_gb: 1
+  disk_size_gb: 10
+
+network:
+  forwarded_ports:
+    - 8080
+
