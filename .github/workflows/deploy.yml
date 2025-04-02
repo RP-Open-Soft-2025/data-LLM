@@ -1,0 +1,40 @@
+name: Deploy to Cloud Run
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v2
+
+            - name: Authenticate with Google Cloud
+              uses: google-github-actions/auth@v1
+              with:
+                  credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+            - name: Set up Google Cloud SDK
+              uses: google-github-actions/setup-gcloud@v1
+              with:
+                  project_id: velvety-ray-454718-b8
+
+            - name: Configure Docker
+              run: |
+                  gcloud auth configure-docker asia-south1-docker.pkg.dev
+
+            - name: Build and Push Docker Image
+              run: |
+                  docker build -t asia-south1-docker.pkg.dev/velvety-ray-454718-b8/opensoft-chatbot/my-image:$GITHUB_SHA .
+                  docker push asia-south1-docker.pkg.dev/velvety-ray-454718-b8/opensoft-chatbot/my-image:$GITHUB_SHA
+
+            - name: Deploy to Cloud Run
+              run: |
+                  gcloud run deploy opensoft-chatbot \
+                    --image asia-south1-docker.pkg.dev/velvety-ray-454718-b8/opensoft-chatbot/my-image:$GITHUB_SHA \
+                    --platform managed \
+                    --region asia-south1 \
+                    --allow-unauthenticated
