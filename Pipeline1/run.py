@@ -20,65 +20,65 @@ def save_report_to_text(report: dict, output_file: str) -> None:
         file.write("=" * 80 + "\n")
         file.write(report.get("overall_analysis", "No overall analysis available.") + "\n\n")
         
-        # Individual reports
-        file.write("DETAILED ANALYSIS BY CATEGORY\n")
-        file.write("=" * 80 + "\n\n")
+        # # Individual reports
+        # file.write("DETAILED ANALYSIS BY CATEGORY\n")
+        # file.write("=" * 80 + "\n\n")
         
-        individual_reports = report.get("individual_reports", {})
+        # individual_reports = report.get("individual_reports", {})
         
-        # Activity report
-        file.write("ACTIVITY ANALYSIS\n")
-        file.write("-" * 80 + "\n")
-        activity_report = individual_reports.get("activity")
-        if activity_report:
-            file.write(activity_report.analysis + "\n\n")
-        else:
-            file.write("No activity analysis available.\n\n")
+        # # Activity report
+        # file.write("ACTIVITY ANALYSIS\n")
+        # file.write("-" * 80 + "\n")
+        # activity_report = individual_reports.get("activity")
+        # if activity_report:
+        #     file.write(activity_report.analysis + "\n\n")
+        # else:
+        #     file.write("No activity analysis available.\n\n")
             
-        # Leave report
-        file.write("LEAVE ANALYSIS\n")
-        file.write("-" * 80 + "\n")
-        leave_report = individual_reports.get("leave")
-        if leave_report:
-            file.write(leave_report.analysis + "\n\n")
-        else:
-            file.write("No leave analysis available.\n\n")
+        # # Leave report
+        # file.write("LEAVE ANALYSIS\n")
+        # file.write("-" * 80 + "\n")
+        # leave_report = individual_reports.get("leave")
+        # if leave_report:
+        #     file.write(leave_report.analysis + "\n\n")
+        # else:
+        #     file.write("No leave analysis available.\n\n")
             
-        # Onboarding report
-        file.write("ONBOARDING ANALYSIS\n")
-        file.write("-" * 80 + "\n")
-        onboarding_report = individual_reports.get("onboarding")
-        if onboarding_report:
-            file.write(onboarding_report.analysis + "\n\n")
-        else:
-            file.write("No onboarding analysis available.\n\n")
+        # # Onboarding report
+        # file.write("ONBOARDING ANALYSIS\n")
+        # file.write("-" * 80 + "\n")
+        # onboarding_report = individual_reports.get("onboarding")
+        # if onboarding_report:
+        #     file.write(onboarding_report.analysis + "\n\n")
+        # else:
+        #     file.write("No onboarding analysis available.\n\n")
             
-        # Performance report
-        file.write("PERFORMANCE ANALYSIS\n")
-        file.write("-" * 80 + "\n")
-        performance_report = individual_reports.get("performance")
-        if performance_report:
-            file.write(performance_report.analysis + "\n\n")
-        else:
-            file.write("No performance analysis available.\n\n")
+        # # Performance report
+        # file.write("PERFORMANCE ANALYSIS\n")
+        # file.write("-" * 80 + "\n")
+        # performance_report = individual_reports.get("performance")
+        # if performance_report:
+        #     file.write(performance_report.analysis + "\n\n")
+        # else:
+        #     file.write("No performance analysis available.\n\n")
             
-        # Rewards report
-        file.write("REWARDS ANALYSIS\n")
-        file.write("-" * 80 + "\n")
-        rewards_report = individual_reports.get("rewards")
-        if rewards_report:
-            file.write(rewards_report.analysis + "\n\n")
-        else:
-            file.write("No rewards analysis available.\n\n")
+        # # Rewards report
+        # file.write("REWARDS ANALYSIS\n")
+        # file.write("-" * 80 + "\n")
+        # rewards_report = individual_reports.get("rewards")
+        # if rewards_report:
+        #     file.write(rewards_report.analysis + "\n\n")
+        # else:
+        #     file.write("No rewards analysis available.\n\n")
             
-        # Vibemeter report
-        file.write("EMOTIONAL STATE ANALYSIS\n")
-        file.write("-" * 80 + "\n")
-        vibemeter_report = individual_reports.get("vibemeter")
-        if vibemeter_report:
-            file.write(vibemeter_report.analysis + "\n\n")
-        else:
-            file.write("No emotional state analysis available.\n\n")
+        # # Vibemeter report
+        # file.write("EMOTIONAL STATE ANALYSIS\n")
+        # file.write("-" * 80 + "\n")
+        # vibemeter_report = individual_reports.get("vibemeter")
+        # if vibemeter_report:
+        #     file.write(vibemeter_report.analysis + "\n\n")
+        # else:
+        #     file.write("No emotional state analysis available.\n\n")
         
         # Timestamp
         from datetime import datetime
@@ -106,7 +106,7 @@ def main():
     print(result.get("consolidated_report", {}).get("overall_analysis", "No analysis available"))
     
     # Save to text file for inspection
-    save_report_to_text(result.get("consolidated_report", {}), "EMP0108_report.txt")
+    save_report_to_text(result.get("consolidated_report", {}), "EMP0136_report.txt")
     
     print("\nFull report saved to employee_report.txt")
 

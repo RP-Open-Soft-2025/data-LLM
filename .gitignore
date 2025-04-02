@@ -131,7 +131,7 @@ dmypy.json
 .env
 
 .vercel
-
+.gcloudignore
 .data
 
 ChatBot/tmp
