@@ -11,7 +11,7 @@ import urllib.request
 import concurrent.futures
 import asyncio
 
-from agents import (
+from .agents import (
     ActivityAgent, 
     LeaveAgent, 
     OnboardingAgent, 
@@ -20,7 +20,7 @@ from agents import (
     VibemeterAgent,
     ConsolidationAgent
 )
-from models import AgentReport
+from .models import AgentReport
 
 # Define the state for our graph
 class EmployeeAnalysisState(TypedDict):
