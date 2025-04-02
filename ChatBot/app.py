@@ -1,8 +1,17 @@
 import os
 import config
-import traceback  # Add this import
+import traceback
 from dotenv import load_dotenv
-import os
+from prompt_templates import (
+    COUNSELING_SYSTEM_PROMPT,
+    QUESTION_GENERATION_PROMPT,
+    NEXT_QUESTION_PROMPT,
+    SUGGESTION_GENERATION_PROMPT,
+    FOLLOW_UP_PROMPT,
+    NEW_SUGGESTION_PROMPT,
+    REPORT_GENERATION_PROMPT
+)
+
 # Try the updated version first, if it fails, use the simpler version
 try:
     from knowledge_base import KnowledgeBaseManager
@@ -14,7 +23,7 @@ from counseling_agent import CounselingAgent
 from conversation_manager import ConversationManager
 
 def main():
-    try:  # Add overall try-except block
+    try:
         print("Initializing Counseling Agent System...")
         
         # Check if required files exist
@@ -36,62 +45,122 @@ def main():
         
         # Load knowledge bases - will skip if already loaded
         kb_manager.load_knowledge_bases(force_reload=False)
+        
         # Import environment variables
-
-        load_dotenv()  # Load environment variables from .env file
+        load_dotenv()
+        
         # Initialize counseling agent
         print("Initializing counseling agent...")
         os.getenv("OPENAI_API_KEY")
             
         counseling_agent = CounselingAgent(
             model_id=config.MODEL_ID,
-            # api_key=openai_api_key,
             kb_manager=kb_manager,
-            system_prompt=config.CUSTOM_SYSTEM_PROMPT
+            system_prompt=COUNSELING_SYSTEM_PROMPT
         )
         
-        # Initialize conversation manager
-        conversation_manager = ConversationManager(counseling_agent)
+        # Initialize conversation manager with all prompt templates
+        conversation_manager = ConversationManager(
+            counseling_agent,
+            question_prompt=QUESTION_GENERATION_PROMPT,
+            next_question_prompt=NEXT_QUESTION_PROMPT,
+            suggestion_prompt=SUGGESTION_GENERATION_PROMPT,
+            follow_up_prompt=FOLLOW_UP_PROMPT,
+            new_suggestion_prompt=NEW_SUGGESTION_PROMPT,
+            report_prompt=REPORT_GENERATION_PROMPT
+        )
         
-        # Start the conversation
         print("\n----- Starting Counseling Session -----\n")
         
-        try:  # Add try-except around conversation start
-            current_question = conversation_manager.start_conversation()
-            print(f"Successfully started conversation with initial question: {current_question[:50]}...")
-        except Exception as e:
-            print(f"Error starting conversation: {str(e)}")
-            print(traceback.format_exc())
-            return
-        
-        # Main conversation loop
-        while not conversation_manager.is_conversation_complete():
-            try:  # Add try-except in the conversation loop
+        try:
+            # Initialize the conversation with the introduction
+            initial_message = conversation_manager.start_conversation()
+            print(f"Counselor: {initial_message}")
+            
+            # Main conversation loop for initial questions
+            for question_num in range(1, 8):
+                # Get the next personalized question
+                current_question = conversation_manager.get_next_question()
                 print(f"Counselor: {current_question}")
+                
+                # Get and process the employee's response
                 user_response = input("Employee: ")
                 
-                # Exit command
+                # Exit command check
                 if user_response.lower() in ["exit", "quit", "stop"]:
                     print("Counseling session terminated by user.")
                     return
                 
                 print("Processing your response...")
-                current_question = conversation_manager.handle_response(user_response)
+                # Only record the response without advancing state yet
+                conversation_manager.record_response(question_num, user_response)
                 print("Response processed successfully.")
                 print()  # Add a blank line for readability
-            except Exception as e:
-                print(f"Error during conversation: {str(e)}")
-                print(traceback.format_exc())
-                print("Would you like to try again or exit? (try/exit)")
-                choice = input().lower()
-                if choice != "try":
+            
+            # After 7 questions, generate and show initial suggestions
+            suggestions = conversation_manager.generate_suggestions()
+            
+            # Display suggestions
+            print("Counselor: Based on our conversation, here are suggestions that I believe would specifically help in your situation:\n")
+            for i, suggestion in enumerate(suggestions, 1):
+                print(f"Suggestion {i}: {suggestion}")
+            print("\nAre you satisfied with at least 2 of these suggestions? If yes, which ones? If not, I'd be happy to continue our conversation.")
+            
+            # Feedback and additional questions loop - continue until satisfied
+            while not conversation_manager.is_conversation_complete():
+                user_response = input("Employee: ")
+                
+                # Exit command check
+                if user_response.lower() in ["exit", "quit", "stop"]:
+                    print("Counseling session terminated by user.")
                     return
-        
-        print(current_question)  # Print the completion message
-        
-        # Generate and display the report
-        print("\n----- Generating Comprehensive Report -----\n")
-        try:  # Add try-except around report generation
+                
+                print("Processing your response...")
+                
+                # Check if they're satisfied with the suggestions using the new method
+                if conversation_manager.state in ["suggestions", "new_suggestions"] and conversation_manager.waiting_for_feedback:
+                    is_satisfied, accepted_indices = counseling_agent.is_satisfied_with_suggestions(user_response)
+                    
+                    if is_satisfied:
+                        # Set the accepted suggestions and move to report generation
+                        conversation_manager.agent.set_accepted_suggestions(accepted_indices)
+                        conversation_manager.is_complete = True
+                        print("Counselor: Thank you for your feedback! I'll make sure these suggestions are passed to our employee experience team. I now have enough information to generate a comprehensive report.")
+                    else:
+                        # They're not satisfied, generate follow-up questions
+                        follow_up_questions = conversation_manager.generate_follow_up_questions()
+                        
+                        # Ask follow-up questions one by one
+                        for question in follow_up_questions:
+                            print(f"Counselor: {question}")
+                            follow_up_response = input("Employee: ")
+                            
+                            # Exit command check
+                            if follow_up_response.lower() in ["exit", "quit", "stop"]:
+                                print("Counseling session terminated by user.")
+                                return
+                                
+                            conversation_manager.record_follow_up_response(question, follow_up_response)
+                        
+                        # After follow-up questions, generate new suggestions
+                        new_suggestions = conversation_manager.generate_new_suggestions()
+                        
+                        # Display new suggestions
+                        print("Counselor: Based on this additional information, here are new suggestions that might better address your situation:\n")
+                        for i, suggestion in enumerate(new_suggestions, 1):
+                            print(f"New Suggestion {i}: {suggestion}")
+                        print("\nAre you satisfied with at least 2 of these suggestions? If yes, which ones? If not, I'd be happy to continue our conversation.")
+                else:
+                    # For other states, use the regular handle_response method
+                    next_message = conversation_manager.handle_response(user_response)
+                    if next_message:
+                        print(f"Counselor: {next_message}")
+                
+                print("Response processed successfully.")
+                print()  # Add a blank line for readability
+            
+            # Generate and display the report when conversation is complete
+            print("\n----- Generating Comprehensive Report -----\n")
             report = conversation_manager.generate_final_report()
             print(report)
             
@@ -100,11 +169,16 @@ def main():
                 f.write(report)
             
             print("\nReport saved to 'employee_counseling_report.md'")
+            
         except Exception as e:
-            print(f"Error generating report: {str(e)}")
+            print(f"Error during conversation: {str(e)}")
             print(traceback.format_exc())
+            print("Would you like to try again or exit? (try/exit)")
+            choice = input().lower()
+            if choice != "try":
+                return
     
-    except Exception as e:  # Catch any other exceptions
+    except Exception as e:
         print(f"An unexpected error occurred: {str(e)}")
         print(traceback.format_exc())
 
