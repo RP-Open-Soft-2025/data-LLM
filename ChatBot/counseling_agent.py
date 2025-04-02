@@ -3,7 +3,7 @@ from agno.models.groq import Groq
 import re
 from agno.models.openai import OpenAIChat
 from agno.tools.thinking import ThinkingTools
-from prompt_templates import (
+from .prompt_templates import (
     COUNSELING_SYSTEM_PROMPT,
     QUESTION_GENERATION_PROMPT,
     NEXT_QUESTION_PROMPT,  # Added NEXT_QUESTION_PROMPT to import list
