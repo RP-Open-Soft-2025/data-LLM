@@ -2,6 +2,7 @@ from agno.knowledge.text import TextKnowledgeBase
 from agno.knowledge.pdf import PDFKnowledgeBase
 from agno.vectordb.lancedb import LanceDb, SearchType
 from agno.embedder.sentence_transformer import SentenceTransformerEmbedder
+from agno.document.chunking.agentic import AgenticChunking
 import os
 
 class KnowledgeBaseManager:
@@ -20,6 +21,7 @@ class KnowledgeBaseManager:
         # Create knowledge base for employee data
         self.employee_kb = TextKnowledgeBase(
             path=employee_data_path,
+            chunking_strategy=AgenticChunking(),
             vector_db=LanceDb(
                 table_name="employee_data",
                 uri=db_uri,
@@ -30,6 +32,7 @@ class KnowledgeBaseManager:
         
         # Create knowledge base for questions
         self.questions_kb = PDFKnowledgeBase(
+            chunking_strategy=AgenticChunking(),
             path=questions_pdf_path,
             vector_db=LanceDb(
                 table_name="question_templates",

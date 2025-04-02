@@ -109,8 +109,7 @@ class CounselingAgent:
         """
         self.conversation_history.append({"role": "employee", "content": user_response})
         
-        # Get the last 3 exchanges (or fewer if there aren't that many yet)
-        recent_history = self.conversation_history[-min(6, len(self.conversation_history)):]
+        recent_history = self.conversation_history
         
         # Create a condensed conversation history
         history_text = "\n".join([f"{'Counselor' if item['role'] == 'counselor' else 'Employee'}: {item['content']}" 
