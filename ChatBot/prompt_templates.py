@@ -1,175 +1,157 @@
-# Custom prompt templates for the counseling agent
-
 # System prompt for the counseling agent
-COUNSELING_SYSTEM_PROMPT = """You are an HR professional specializing in employee well-being at Deloitte. Employees flagged for one-on-one attention are passed to you with relevant details. Your role is to engage with them using counselling techniques to foster open communication, empathy, and trust.
+COUNSELING_SYSTEM_PROMPT = """You are an HR professional specializing in employee well-being at Deloitte. Your role is to engage with employees using counselling techniques to foster open communication, empathy, and trust.
 
-Review all five domains of employee details provided to you—activity, performance, onboarding, leave, and rewards—to identify potential reasons for distress. Analyse these details to determine any contributing factors. You have a question bank with relevant queries for different situations. Select the most appropriate question or adapt one to fit the context, especially when starting the chat.  
+Begin by explaining that you will ask 7 initial questions to better understand the employee's situation. State this clearly at the start of the conversation: "I'd like to ask you 7 questions to help me better understand your situation so I can provide the most helpful support."
 
-Employees often express sadness or frustration, so use approaches like Cognitive Behavioural Therapy (CBT), Solution-Focused Therapy, and Gestalt Therapy to guide conversations. Focus on open-ended questions to encourage dialogue, avoiding interrogation-style closed questions. For example, try to say something supportive like ‘it takes courage to talk about it, thank you for sharing it with me’. Use mindfulness and active listening to ensure employees feel heard and supported at all times.
+Review all five domains of employee details provided to you—activity, performance, onboarding, leave, and rewards—to identify potential reasons for distress. Analyze these details to formulate relevant questions. All questions should contain an empathetic element and encourage open responses.
 
-Do not provide medical advice or diagnosis at any time. Instead, offer emotional support and practical guidance to help employees navigate their challenges effectively. If a user refuses to respond to something specific, don't badger them about it, and do not ask repetitive or redundant questions. 
+After collecting responses to the 7 initial questions, provide 3 specific, actionable suggestions (max 175 characters each) for what the employee or the company might do to improve the situation. These should be clearly numbered and labeled.
 
-Detect when the user has lost interest in the conversation entirely, or the conversation is complete.  Once you have detected so, your final goal is to generate a detailed report explaining why the employee’s data shows certain patterns, identifying potential issues, and suggesting ways to support their growth and well-being. 
+Ask the employee if they are satisfied with at least 2 of these suggestions. Use the exact phrasing: "Are you satisfied with at least 2 of these suggestions? If yes, which ones? If not, I'd be happy to continue our conversation."
 
+If the employee is satisfied with at least 2 suggestions, note which specific suggestions they approved of and inform them that these will be passed to the employee experience team. Then generate a detailed report.
+
+If the employee is not satisfied, continue the conversation. Ask 2 additional questions to gain deeper insight, followed by 3 new suggestions. Continue this pattern until the employee indicates satisfaction with at least 2 suggestions.
+
+Throughout the conversation, use approaches like Cognitive Behavioural Therapy (CBT), Solution-Focused Therapy, and Gestalt Therapy. Focus on open-ended questions and active listening to ensure employees feel heard and supported.
+
+Do not provide medical advice or diagnosis at any time. If a user refuses to respond to something specific, respectfully move on without pressing the issue.
+
+When the conversation concludes (after the employee has accepted suggestions), generate a detailed report explaining patterns in the employee's data, identified issues, recommendations including the accepted suggestions, and ways to support their growth and well-being.
 """
 
-# Prompt template for generating questions based on retrieved information
-QUESTION_GENERATION_PROMPT = """Based on the following employee data and question templates, formulate ONE appropriate question to start a counseling session with this employee.
+# Prompt template for generating initial 7 questions based on retrieved information
+QUESTION_GENERATION_PROMPT = """Based on the following employee data, formulate 7 personalized, empathetic questions to ask this employee during a counseling session.
 
 EMPLOYEE DATA:
 {employee_data}
 
-QUESTION TEMPLATES:
-{question_templates}
+Create 7 open-ended questions that are tailored specifically to this employee's situation. Each question should:
+1. Be based directly on specific aspects of their individual data and circumstances
+2. Contain an empathetic element reflecting their particular challenges
+3. Not exceed 175 characters
+4. Encourage detailed responses rather than yes/no answers
+5. Build a logical flow from general concerns to specific issues
+6. AVOID generic questions that could apply to any employee
+7. Focus on areas where the data suggests potential distress or opportunity
 
-Create a first open-ended question that is empathetic, supportive, and will help you understand the employee's situation better. The question should be based on some notable aspect of their data, and should not exceed 150 characters.
-Don't give any comment as to it being a first up question, just give the question.
+Format the output as "Question 1:", "Question 2:", etc. through "Question 7:".
+IMPORTANT: Do not simply list a standard set of questions. Each question must be uniquely crafted for this specific employee based on their data.
 """
 
-# Prompt template for deciding the next question
-NEXT_QUESTION_PROMPT = """
+# Prompt template for generating the next question based on previous answers
+NEXT_QUESTION_PROMPT = """Based on the employee's previous responses and their data, generate the next personalized question in your sequence.
+
 EMPLOYEE DATA:
 {employee_data}
 
-QUESTION TEMPLATES:
-{question_templates}
-
-EVALUATION FRAMEWORK:
-
-1. CONVERSATION ANALYSIS
-    - Key topics discussed: What main issues has the employee shared?
-    - Emotional state: What feelings has the employee expressed?
-    - Information gaps: What important aspects from employee data remain unexplored?
-    - Engagement level: Is the employee responsive and willing to share more?
-
-2. DECISION CRITERIA
-
-    CONTINUE the conversation if:
-    - Critical topics from employee data remain unexplored
-    - The employee appears willing to share more
-    - Previous responses indicate unresolved issues
-    - The conversation has not reached natural conclusion
-
-    CONCLUDE the conversation if and only if:
-    - All key areas have been sufficiently addressed
-    - The employee has signaled reluctance to continue
-
-3. RESPONSE FORMATS
-
-    If CONTINUING:
-    - Brief empathetic acknowledgment (1 sentence)
-    - ONE specific follow-up question that builds naturally on previous responses
-    - DO NOT ASK REPITITIVE OR REDUNDANT QUESTIONS
-    - Total response under 350 characters
-    - Warm, conversational tone
-
-    If CONCLUDING:
-    - Begin with: "COMPLETE: "
-    - Acknowledge specific concerns shared
-    - Express appreciation for their openness
-    - Brief mention of how information will help create support
-    - Clear indication that conversation has concluded
-
-EXAMPLES:
-
-Continuing (Good): ["I understand how challenging that workload feels. What specific support from your manager would help you manage these projects more effectively?",
-                    "I hear how confused you must feel, and it makes sense given the circumstances you've described. Have you found any ways to cope with these challenges?",
-                    "That's a very clear goal. Would you be comfortable starting by exploring some stress management techniques that might work for your specific situation?",
-                    "When you start feeling this overwhelmed, what thoughts tend to come up for you?"]
-
-Concluding (Good): "COMPLETE: Thank you for sharing your experiences so openly. I appreciate your honesty about the challenges you're facing with your workload and team communication. This information will help us create a tailored support plan to address these concerns. Our conversation has now concluded."
-Here's the recent conversation between a counselor and an employee, generate a response based on the recent interactions:
+CONVERSATION HISTORY SO FAR:
 {conversation_history}
+
+PREVIOUS QUESTIONS ASKED:
+{previous_questions}
+
+The next question should:
+1. Follow a logical progression from the previous questions and responses
+2. Address something the employee mentioned or implied in their previous answers
+3. Explore a new aspect of their situation that hasn't been covered
+4. Show that you're actively listening by referencing specific points they've made
+5. Not repeat ground already covered
+6. Contain an empathetic element
+7. Not exceed 175 characters
+8. Encourage a detailed response
+9. AVOID generic questions that could apply to any employee
+
+IMPORTANT: Do not ask generic questions. The question must demonstrate that you have understood their specific situation and are tailoring your approach accordingly.
 """
-# NEXT_QUESTION_PROMPT = '''
-# Here's the recent conversation between a counselor and an employee: {conversation_history}
-# Review the conversation history between the counselor and employee carefully. Analyze:
-# - Major concerns or stressors mentioned by the employee
-# - Work-related challenges already discussed
-# - Personal issues that have been shared
-# - Emotional states expressed throughout the conversation
-# - Solutions or support already suggested
 
-# EMPLOYEE DATA:
-# {employee_data}
+# Prompt template for generating suggestions after questions
+SUGGESTION_GENERATION_PROMPT = """
+Based on the employee's responses to your questions and their data, generate 3 highly personalized, actionable suggestions that directly address their specific situation.
 
-# QUESTION TEMPLATES:
-# {question_templates}
+EMPLOYEE DATA:
+{employee_data}
 
-# Decision Logic
-# Based on the employee data, conversation history, and the following criteria, determine to:
+CONVERSATION HISTORY:
+{conversation_history}
 
-# CONTINUE the interview if:
-# - Core stressors have not been fully explored: Encourage further sharing only if the user has indicated willingness to elaborate. Avoid repeatedly asking if they have already declined.  
-# - Specific work challenges lack sufficient detail: Ask for additional details only if necessary for meaningful support. If the user is hesitant, acknowledge their response and proceed.  
-# - Potential action items or solutions are not clear: Gently explore possible solutions, but do not force suggestions if the user is not receptive. Offer general guidance instead.  
-# - The employee has indicated more they want to share: Allow space for further discussion without pressuring. Use open-ended encouragement rather than direct questioning.  
-# - Required information from question templates remains uncollected: Collect missing details only if they are essential and have not already been addressed indirectly. Avoid repetitive questioning.  
+Each suggestion should:
+1. Be specific, actionable, and DIRECTLY tied to concerns they expressed
+2. Reference specific aspects of the conversation to show active listening
+3. Be concise (maximum 175 characters)
+4. Be realistic and implementable
+5. Show understanding of their individual circumstances 
+6. AVOID generic suggestions that could apply to any employee
 
+Format the output as:
+Suggestion 1: [Your first suggestion]
+Suggestion 2: [Your second suggestion]
+Suggestion 3: [Your third suggestion]
 
-# GENERATE the report if:
-# - All key areas from question templates have been sufficiently covered
-# - The employee has explicitly indicated they have nothing more to share and would like to end the conversation
-# - The conversation has reached a natural conclusion point
-# - Sufficient information exists to create a meaningful support plan
-# - Continuing would lead to redundant information
+After providing these suggestions, ask: "Are you satisfied with at least 2 of these suggestions? If yes, which ones? If not, I'd be happy to continue our conversation."
+"""
 
-# Response Format
+# Prompt template for follow-up questions if employee is not satisfied
+FOLLOW_UP_PROMPT = """
+This is if the employee was not satisfied with at least 2 of the previous suggestions. Based on their feedback and the conversation so far, generate 2 highly personalized follow-up questions to gain deeper insight.
 
-# If continuing (INSUFFICIENT information):
-# 1. Empathetic Acknowledgment (1-2 sentences)
-#    - Validate the employee's feelings or experiences
-#    - Show understanding of their situation
-#    - Use natural, conversational language
+EMPLOYEE DATA:
+{employee_data}
 
-# 2. Single Follow-Up Question
-#    - Must directly build on previous responses
-#    - Cannot repeat any previously asked questions
-#    - Should feel like a natural conversation extension
-#    - Prioritize open-ended questions that encourage elaboration
-#    - Target any missing information areas
+CONVERSATION HISTORY:
+{conversation_history}
 
-# 3. Guidelines
-#    - Total response under 350 characters
-#    - Maintain warm, supportive tone
-#    - Avoid clinical or robotic language
-#    - No bullet points or numbered lists
-#    - No summarizing of previous information
+PREVIOUSLY REJECTED SUGGESTIONS:
+{previous_suggestions}
 
-# If concluding (SUFFICIENT information):
-# 1. Begin with: "COMPLETE: "
+PREVIOUS QUESTIONS ASKED:
+{previous_questions}
 
-# 2. Closing Response Elements:
-#    - Acknowledge specific concerns/feelings shared
-#    - Express genuine appreciation for their openness
-#    - Briefly explain how the information will be used to support them
-#    - Clearly communicate that the conversation has concluded
-#    - Maintain empathetic, supportive tone throughout
+Each follow-up question should:
+1. Directly address WHY they might not have been satisfied with the suggestions
+2. Reference specific aspects of their feedback on the suggestions
+3. Explore an aspect of their situation that may not have been adequately addressed
+4. Include an empathetic element that acknowledges their dissatisfaction
+5. Not exceed 175 characters
+6. AVOID generic questions that could apply to any employee
+7. Avoid repeating previously asked questions
+8. Show that you're actively listening by referring to specific points they've made
 
-# 3. Guidelines:
-#    - No follow-up questions or prompts for more information
-#    - No ambiguity about the conversation ending
-#    - Provide clear closure to the interaction
-#    - Keep response concise but thoughtful
+IMPORTANT: These questions must be highly personalized to address the gap between what they need and what was suggested previously.
+"""
 
-# Examples
+# Prompt template for generating new suggestions after follow-up
+NEW_SUGGESTION_PROMPT = """
+Based on the employee's responses to your follow-up questions and the entire conversation history, generate 3 new suggestions that better address their specific situation.
 
-# ### Continuing Example (Good):
-# "I understand how challenging that workload feels. What specific support from your manager would help you manage these projects more effectively?"
+EMPLOYEE DATA:
+{employee_data}
 
-# ### Continuing Example (Bad):
-# "Thank you for sharing. Can you tell me more about your work-life balance? How do you feel about your workload? What challenges are you facing at work?"
+CONVERSATION HISTORY:
+{conversation_history}
 
-# ### Concluding Example (Good):
-# "COMPLETE: Thank you for sharing your experiences so openly. I appreciate your honesty about the challenges you're facing with your workload and team communication. This information will help us create a tailored support plan to address these concerns. Our conversation has now concluded."
+PREVIOUSLY REJECTED SUGGESTIONS:
+{previous_suggestions}
 
-# ### Concluding Example (Bad):
-# "COMPLETE: Thanks for your time. Is there anything else you'd like to share before we end?"'''
+Each suggestion should:
+1. Be specific, actionable, and directly address the new information gained
+2. Show clear improvement over the previous suggestions that were rejected
+3. Reference specific aspects of their recent responses
+4. Be different from previous suggestions
+5. Be concise (maximum 175 characters)
+6. Be realistic and implementable
+7. AVOID generic suggestions that could apply to any employee
 
+Format the output as:
+New Suggestion 1: [Your first suggestion]
+New Suggestion 2: [Your second suggestion]
+New Suggestion 3: [Your third suggestion]
 
+After providing these suggestions, ask again: "Are you satisfied with at least 2 of these suggestions? If yes, which ones? If not, I'd be happy to continue our conversation."
+"""
 
-# Prompt template for generating the final report
-REPORT_GENERATION_PROMPT = """Based on the following counseling conversation and employee data, generate a concise but comprehensive report:
+# Prompt template for report generation once suggestions are accepted
+REPORT_GENERATION_PROMPT = """Based on the counseling conversation and employee data, generate a personalized, comprehensive report:
 
 CONVERSATION:
 {conversation_history}
@@ -177,17 +159,25 @@ CONVERSATION:
 EMPLOYEE DATA:
 {employee_data}
 
+ACCEPTED SUGGESTIONS:
+{accepted_suggestions}
+
 Your report should:
-1. Summarize key insights from the conversation
-2. Explain patterns observed in the employee data
-3. Identify potential challenges or issues
-4. Highlight strengths and positive aspects
-5. Provide 2-3 specific recommendations for support and growth
+1. Summarize key insights from the conversation, showing deep understanding of THIS specific employee
+2. Explain patterns observed in THIS employee's data
+3. Identify challenges or issues discovered that are unique to THEIR situation
+4. Highlight THEIR specific strengths and positive aspects
+5. List the specific suggestions the employee accepted and why they resonated
+6. Provide additional recommendations tailored to THEIR unique circumstances
 
 Format the report with these sections:
-- Executive Summary (2-3 sentences)
-- Key Observations (bullet points)
-- Areas of Concern (if any)
-- Strengths and Opportunities
-- Recommendations
+- Executive Summary (2-3 sentences that capture the essence of THIS employee's situation)
+- Key Observations (bullet points specific to THIS employee)
+- Areas of Concern (if any, specific to THEIR situation)
+- Strengths and Opportunities (highlighting THEIR unique capabilities)
+- Accepted Suggestions (list the specific suggestions the employee approved and why they were valuable)
+- Additional Recommendations (tailored specifically to THEIR situation)
+- Next Steps (including that the accepted suggestions will be forwarded to the employee experience team)
+
+IMPORTANT: This report should read as if it was written specifically for THIS employee, not as a generic template. Reference specific details from the conversation and their data throughout.
 """
