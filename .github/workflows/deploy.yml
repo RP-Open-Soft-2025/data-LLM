@@ -28,13 +28,13 @@ jobs:
 
             - name: Build and Push Docker Image
               run: |
-                  docker build -t asia-south1-docker.pkg.dev/velvety-ray-454718-b8/opensoft-chatbot/my-image:$GITHUB_SHA .
-                  docker push asia-south1-docker.pkg.dev/velvety-ray-454718-b8/opensoft-chatbot/my-image:$GITHUB_SHA
+                  docker build -t asia-south1-docker.pkg.dev/velvety-ray-454718-b8/opensoft-chatbot/my-image:latest .
+                  docker push asia-south1-docker.pkg.dev/velvety-ray-454718-b8/opensoft-chatbot/my-image:latest
 
             - name: Deploy to Cloud Run
               run: |
                   gcloud run deploy opensoft-chatbot \
-                    --image asia-south1-docker.pkg.dev/velvety-ray-454718-b8/opensoft-chatbot/my-image:$GITHUB_SHA \
+                    --image asia-south1-docker.pkg.dev/velvety-ray-454718-b8/opensoft-chatbot/my-image:latest \
                     --platform managed \
                     --region asia-south1 \
                     --allow-unauthenticated
