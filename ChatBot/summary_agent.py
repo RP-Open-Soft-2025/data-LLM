@@ -2,13 +2,17 @@ import datetime
 from enum import Enum
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from openai import OpenAI
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-# (if you have one)
+# Import Agno framework - only Gemini
+from agno.agent import Agent
+from agno.models.google import Gemini
 
+# Import configuration settings
+from config import MODEL_ID, GEMINI_API_KEY
+
+# Load environment variables from .env file
 load_dotenv()
 
 
@@ -30,16 +34,21 @@ class Message(BaseModel):
 
 
 class SummarizerAgent:
-    def __init__(self, model="gpt-4o-mini"):
-        """Initialize the summarizer agent with specified model"""
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.model = model
+    def __init__(self, model=MODEL_ID):
+        """Initialize the summarizer agent with Gemini model using Agno framework"""
+        self.model_id = model
+
+        # Only use Gemini model through Agno
+        self.agent = Agent(
+            model=Gemini(id=model, api_key=GEMINI_API_KEY),
+            markdown=True,
+        )
 
     def summarize_conversation(
         self, current_context: str, messages: List[Message]
     ) -> str:
         """
-        Summarize the conversation and create an updated context
+        Summarize the conversation and create an updated context using the Agno agent with Gemini
 
         Args:
             current_context: The existing context string
@@ -75,16 +84,11 @@ class SummarizerAgent:
         New Context:
         """
 
-        # Call the API
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=1000,
-            temperature=0.5,
-        )
+        # Use the Agno agent to generate the response
+        response = self.agent.message(prompt)
 
-        # Extract and return the updated context
-        return response.choices[0].message.content.strip()
+        # Return the response content
+        return response.content.strip()
 
 
 # Test function with dummy data
