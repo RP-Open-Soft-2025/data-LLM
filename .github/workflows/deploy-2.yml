@@ -1,0 +1,40 @@
+name: Deploy to VM via SSH and Docker Compose
+
+on:
+    push:
+        branches: [main]
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            # Step 1: Check out the repository
+            - name: Checkout source code
+              uses: actions/checkout@v3
+
+            # Step 2: Set up the SSH agent with your private key
+            - name: Set up SSH
+              uses: webfactory/ssh-agent@v0.5.3
+              with:
+                  ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+            # Step 3: Run deployment commands on the remote VM
+            - name: Deploy using SSH and Docker Compose
+              run: |
+                  ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_IP }} << 'EOF'
+                    # Navigate to your application's directory (adjust this path)
+                    cd data-LLM
+                    
+                    # Option 1: If your app directory is a Git repository, pull the latest changes
+                    git pull origin main
+                    
+                    # Option 2: Alternatively, if you want to re-build without pulling from Git,
+                    # you could update files using scp or other methods.
+                    
+                    # Stop the current containers (if necessary)
+                    docker compose down
+                    
+                    # Build and start containers in detached mode
+                    docker compose up --build -d
+                  EOF
