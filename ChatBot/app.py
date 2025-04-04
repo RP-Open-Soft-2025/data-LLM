@@ -43,12 +43,10 @@ def main():
         load_dotenv()  # Load environment variables from .env file
         # Initialize counseling agent
         print("Initializing counseling agent...")
-        os.getenv("OPENAI_API_KEY")
+        os.getenv("GEMINI_API_KEY")
 
         # This would normally be retrieved from a database
-        context = (
-            "The person is very hardworking and good in personal well being"  # Empty for now, would be populated from MongoDB in a real scenario
-        )
+        context = ""  # Empty for now, would be populated from MongoDB in a real scenario
 
         counseling_agent = CounselingAgent(
             model_id=config.MODEL_ID,

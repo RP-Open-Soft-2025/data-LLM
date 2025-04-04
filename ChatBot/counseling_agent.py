@@ -1,7 +1,7 @@
 from agno.agent import Agent
 from agno.models.groq import Groq
 import re
-from agno.models.openai import OpenAIChat
+from agno.models.google import Gemini
 from agno.tools.thinking import ThinkingTools
 from prompt_templates import (
     COUNSELING_SYSTEM_PROMPT,
@@ -22,7 +22,7 @@ class CounselingAgent:
         Initialize the counseling agent.
 
         Args:
-            model_id: ID of the LLM to use (e.g., "llama-3.3-70b-versatile")
+            model_id: ID of the LLM to use (Gemini model ID)
             kb_manager: Knowledge base manager for retrieving relevant information
             system_prompt: Custom system prompt for the agent
             context: Previous conversation context/summary (if any)
@@ -33,17 +33,13 @@ class CounselingAgent:
         self.kb_manager = kb_manager
         self.context = context if context else ""
 
-        # Initialize agent with a description
-        # self.agent = Agent(
-        #     model=Groq(id=model_id, api_key=api_key),
-        #     description=self.system_prompt,
-        #     markdown=True,
-        # )
-        # from agno.agent import Agent, RunResponse
+        # Use Gemini model with API key from environment variables
+        api_key = os.getenv("GEMINI_API_KEY")
+        model = Gemini(id=model_id, api_key=api_key)
 
-        os.getenv("OPENAI_API_KEY")
+        # Initialize the agent with the configured model
         self.agent = Agent(
-            model=OpenAIChat(id="gpt-4o-mini"),
+            model=model,
             tools=[ThinkingTools()],
             markdown=True,
             description=self.system_prompt,
