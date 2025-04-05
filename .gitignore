@@ -135,6 +135,8 @@ dmypy.json
 .data
 .vscode
 
+tmp
 ChatBot/tmp
 ChatBot/employee_counseling_report.md
 ChatBot/config.py
+ChatBot_copy
