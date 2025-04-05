@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-import config
+from . import config
 import time
 from dotenv import load_dotenv
 

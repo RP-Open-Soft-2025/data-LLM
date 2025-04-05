@@ -1,5 +1,5 @@
 import os
-import config
+from . import config
 import traceback  # Add this import
 from dotenv import load_dotenv
 import os
