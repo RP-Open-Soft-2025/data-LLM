@@ -4,28 +4,32 @@ import json
 import os
 from langraph_workflow import employee_analysis_graph
 
+
 def load_employee_data(file_path: str) -> dict:
     """Load employee data from a JSON file."""
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         data = json.load(file)
     return data
 
+
 def save_report_to_text(report: dict, output_file: str) -> None:
     """Save the consolidated report to a text file."""
-    with open(output_file, 'w') as file:
+    with open(output_file, "w") as file:
         file.write("=== EMPLOYEE MOOD AND BEHAVIOR ANALYSIS ===\n\n")
-        
+
         # Overall analysis
         file.write("OVERALL ANALYSIS\n")
         file.write("=" * 80 + "\n")
-        file.write(report.get("overall_analysis", "No overall analysis available.") + "\n\n")
-        
+        file.write(
+            report.get("overall_analysis", "No overall analysis available.") + "\n\n"
+        )
+
         # # Individual reports
         # file.write("DETAILED ANALYSIS BY CATEGORY\n")
         # file.write("=" * 80 + "\n\n")
-        
+
         # individual_reports = report.get("individual_reports", {})
-        
+
         # # Activity report
         # file.write("ACTIVITY ANALYSIS\n")
         # file.write("-" * 80 + "\n")
@@ -34,7 +38,7 @@ def save_report_to_text(report: dict, output_file: str) -> None:
         #     file.write(activity_report.analysis + "\n\n")
         # else:
         #     file.write("No activity analysis available.\n\n")
-            
+
         # # Leave report
         # file.write("LEAVE ANALYSIS\n")
         # file.write("-" * 80 + "\n")
@@ -43,7 +47,7 @@ def save_report_to_text(report: dict, output_file: str) -> None:
         #     file.write(leave_report.analysis + "\n\n")
         # else:
         #     file.write("No leave analysis available.\n\n")
-            
+
         # # Onboarding report
         # file.write("ONBOARDING ANALYSIS\n")
         # file.write("-" * 80 + "\n")
@@ -52,7 +56,7 @@ def save_report_to_text(report: dict, output_file: str) -> None:
         #     file.write(onboarding_report.analysis + "\n\n")
         # else:
         #     file.write("No onboarding analysis available.\n\n")
-            
+
         # # Performance report
         # file.write("PERFORMANCE ANALYSIS\n")
         # file.write("-" * 80 + "\n")
@@ -61,7 +65,7 @@ def save_report_to_text(report: dict, output_file: str) -> None:
         #     file.write(performance_report.analysis + "\n\n")
         # else:
         #     file.write("No performance analysis available.\n\n")
-            
+
         # # Rewards report
         # file.write("REWARDS ANALYSIS\n")
         # file.write("-" * 80 + "\n")
@@ -70,7 +74,7 @@ def save_report_to_text(report: dict, output_file: str) -> None:
         #     file.write(rewards_report.analysis + "\n\n")
         # else:
         #     file.write("No rewards analysis available.\n\n")
-            
+
         # # Vibemeter report
         # file.write("EMOTIONAL STATE ANALYSIS\n")
         # file.write("-" * 80 + "\n")
@@ -79,36 +83,46 @@ def save_report_to_text(report: dict, output_file: str) -> None:
         #     file.write(vibemeter_report.analysis + "\n\n")
         # else:
         #     file.write("No emotional state analysis available.\n\n")
-        
+
         # Timestamp
         from datetime import datetime
-        file.write(f"\nReport generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+
+        file.write(
+            f"\nReport generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+        )
+
 
 def main():
     """Run example analysis on employee data."""
     print("Starting employee analysis using LangGraph...")
-    
+
     # Load employee data from employee.json
     employee_data = load_employee_data("employee.json")
-    
+
     # Initialize the state
-    initial_state = {
-        "employee_data": employee_data,
-        "status": "started"
-    }
-    
+    initial_state = {"employee_data": employee_data, "status": "started"}
+
     # Run the analysis
     result = employee_analysis_graph.invoke(initial_state)
-    
+
     # Print the result summary
     print("\n=== ANALYSIS COMPLETE ===\n")
     print("Overall Analysis:")
-    print(result.get("consolidated_report", {}).get("overall_analysis", "No analysis available"))
-    
+    print(
+        result.get("consolidated_report", {}).get(
+            "overall_analysis", "No analysis available"
+        )
+    )
+
     # Save to text file for inspection
-    save_report_to_text(result.get("consolidated_report", {}), "EMP0136_report.txt")
-    
-    print("\nFull report saved to employee_report.txt")
+    # save_report_to_text(result.get("consolidated_report", {}), "EMP0136_report.txt")
+
+    # print("\nFull report saved to employee_report.txt")
+    emp_id = employee_data.get("employee_id", "EMP0136")
+    save_report_to_text(result.get("consolidated_report", {}), f"{emp_id}_report.txt")
+
+    print(f"\nFull report saved to {emp_id}_report.txt")
+
 
 if __name__ == "__main__":
     main()
