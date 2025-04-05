@@ -29,7 +29,7 @@ QUESTION TEMPLATES:
 
 First, identify ALL distinct issues mentioned in the employee data (e.g., burnout, isolation, performance concerns, etc.).
 
-Begin with a warm greeting like "Hello [Name]" or "Good day" and a brief introduction of yourself as an HR professional focused on employee well-being. Then ask a general question about their well-being such as "How are you doing today?" or "How have you been feeling lately?".
+Begin with a warm greeting like "Hello, how are you doing?" or "Good day" and a brief introduction of yourself as an HR professional focused on employee well-being. Then ask a general question about their well-being such as "How are you doing today?" or "How have you been feeling lately?".
 
 After the greeting, create an open-ended question that is empathetic, supportive, and will help you understand the employee's situation better. The question should be based on the MOST CRITICAL issue identified in their data. Your response should not exceed 200 characters in total.
 
@@ -60,9 +60,9 @@ First, identify ALL distinct issues mentioned in the employee data (e.g., burnou
 
 Then, analyze which issues have already been explored in previous sessions based on the context provided. Create a list of issues that remain unexplored.
 
-Begin with a warm greeting like "Hello [Name]" or "Good day" and ask a general question about their well-being such as "How are you doing today?" or "How has things been since we last spoke?".
+Begin with a warm greeting like "Hello, how are you doing today?" or "Good day" that explicitly references the context, such as "It's good to connect with you again. Last time we discussed {context}. How have things been since then?" or "Hi there, I hope things have improved since we last spoke about {context}."
 
-Then acknowledge your previous conversation by saying something like "Last time we talked about {context}" or "Previously, we discussed some concerns about {context}".
+Then ask a general question about their well-being such as "How are you doing today?" or "How have you been feeling lately?".
 
 Next, create a new open-ended question that explores the NEXT unexplored issue from their employee data. The question should:
 - Focus specifically on an issue that has NOT been discussed previously
