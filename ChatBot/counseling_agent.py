@@ -12,6 +12,7 @@ from .prompt_templates import (
 )
 from dotenv import load_dotenv
 import os
+from . import config
 
 load_dotenv()
 
@@ -36,6 +37,21 @@ class CounselingAgent:
         # Use Gemini model with API key from environment variables
         api_key = os.getenv("GEMINI_API_KEY")
         model = Gemini(id=model_id, api_key=api_key)
+
+        search_query = f"""
+        Summary of chat history of an employee's counselling sessions (note that this can be empty):
+        {context}
+
+        The most appropriate questions to ask the given employee based on the context:
+        """
+
+        with open(config.EMPLOYEE_DATA_PATH, "r") as file:
+            self.employee_data = file.read()
+
+        # Retrieve relevant information based on the conversation
+        self.question_templates = self.kb_manager.retrieve_from_questions(
+            search_query, num_documents=1
+        )
 
         # Initialize the agent with the configured model
         self.agent = Agent(
@@ -136,17 +152,6 @@ class CounselingAgent:
             ]
         )
 
-        # Create a search query based on the conversation
-        search_query = f"Counseling questions related to: {user_response}"
-
-        # Retrieve relevant information based on the conversation
-        employee_data = self.kb_manager.retrieve_from_employee_data(
-            search_query, num_documents=1
-        )
-        question_templates = self.kb_manager.retrieve_from_questions(
-            search_query, num_documents=1
-        )
-
         # Check if we've had enough exchanges to complete the interview (minimum 5 questions)
         counselor_turns = sum(
             1 for item in self.conversation_history if item["role"] == "counselor"
@@ -155,8 +160,8 @@ class CounselingAgent:
         # Create the prompt for the next question
         prompt = NEXT_QUESTION_PROMPT.format(
             conversation_history=history_text,
-            employee_data=employee_data,
-            question_templates=question_templates,
+            employee_data=self.employee_data,
+            question_templates=self.question_templates,
             context=self.context,
             enough_turns=(counselor_turns >= 3),
         )
