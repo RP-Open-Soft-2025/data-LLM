@@ -3,7 +3,7 @@ from agno.models.groq import Groq
 import re
 from agno.models.google import Gemini
 from agno.tools.thinking import ThinkingTools
-from prompt_templates import (
+from .prompt_templates import (
     COUNSELING_SYSTEM_PROMPT,
     QUESTION_GENERATION_PROMPT,
     QUESTION_GENERATION_PROMPT_WHEN_CONTEXT,
