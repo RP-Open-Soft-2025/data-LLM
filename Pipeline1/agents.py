@@ -10,7 +10,7 @@ from .prompt_templates import (
     ONBOARDING_AGENT_PROMPT,
     PERFORMANCE_AGENT_PROMPT,
     REWARDS_AGENT_PROMPT,
-    VIBEMETER_AGENT_PROMPT,
+    # VIBEMETER_AGENT_PROMPT,
     CONSOLIDATION_AGENT_PROMPT,
 )
 
@@ -44,7 +44,10 @@ class BaseAgent:
 
         # Create input for the prompt
         prompt_input = {f"{self.data_key}_data": formatted_data}
-
+        if self.data_key != "vibemeter":
+            vibemeter_data = employee_data.get("company_data", {}).get("vibemeter", [])
+            formatted_vibemeter_data = self.format_data(vibemeter_data)
+            prompt_input["vibemeter_data"] = formatted_vibemeter_data
         # Generate report
         result = self.chain.invoke(prompt_input)
 
@@ -101,11 +104,11 @@ class RewardsAgent(BaseAgent):
         super().__init__(REWARDS_AGENT_PROMPT, "rewards")
 
 
-class VibemeterAgent(BaseAgent):
-    """Agent for analyzing employee vibemeter data."""
+# class VibemeterAgent(BaseAgent):
+#     """Agent for analyzing employee vibemeter data."""
 
-    def __init__(self):
-        super().__init__(VIBEMETER_AGENT_PROMPT, "vibemeter")
+#     def __init__(self):
+#         super().__init__(VIBEMETER_AGENT_PROMPT, "vibemeter")
 
 
 class ConsolidationAgent:
@@ -135,7 +138,7 @@ class ConsolidationAgent:
             "onboarding_report": reports["onboarding"].analysis,
             "performance_report": reports["performance"].analysis,
             "rewards_report": reports["rewards"].analysis,
-            "vibemeter_report": reports["vibemeter"].analysis,
+            # "vibemeter_report": reports["vibemeter"].analysis,
         }
 
         # Generate consolidated report

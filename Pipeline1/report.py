@@ -12,8 +12,10 @@ router = APIRouter()
 REPORTS_DIR = Path(__file__).parent.parent / "emp_reports"
 REPORTS_DIR.mkdir(exist_ok=True)
 
+
 class EmployeeDataRequest(BaseModel):
     employee_data: Dict[str, Any]
+
 
 @router.post("/analyze")
 async def analyze_employee_data(request: EmployeeDataRequest):
@@ -24,35 +26,44 @@ async def analyze_employee_data(request: EmployeeDataRequest):
         # Get employee ID from the request
         emp_id = request.employee_data.get("employee_id")
         if not emp_id:
-            raise HTTPException(status_code=400, detail="Employee ID is required in the request data")
+            raise HTTPException(
+                status_code=400, detail="Employee ID is required in the request data"
+            )
 
         # Initialize the state
-        initial_state = {
-            "employee_data": request.employee_data,
-            "status": "started"
-        }
-        
+        initial_state = {"employee_data": request.employee_data, "status": "started"}
+
+        print("Starting employee analysis...", initial_state)
+
         # Run the analysis
         result = employee_analysis_graph.invoke(initial_state)
-        
+
+        print("Analysis complete.")
+
         # Extract the consolidated report
         consolidated_report = result.get("consolidated_report", {})
-        
+
+        if not consolidated_report:
+            raise HTTPException(
+                status_code=500, detail="No consolidated report generated"
+            )
+
         # Generate report filename using employee ID
         report_filename = f"{emp_id}_report.txt"
         report_path = REPORTS_DIR / report_filename
-        
+
         # Save the report
         save_report_to_text(consolidated_report, str(report_path))
-        
+
         return {
             "summary": format_report_for_display(result),
             "report_path": str(report_path),
-            "message": f"Report generated successfully for employee {emp_id}"
+            "message": f"Report generated successfully for employee {emp_id}",
         }
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/download-report/{emp_id}")
 async def download_report(emp_id: str):
@@ -64,13 +75,16 @@ async def download_report(emp_id: str):
         if report_path.exists():
             return FileResponse(
                 str(report_path),
-                media_type='text/plain',
-                filename=f"{emp_id}_report.txt"
+                media_type="text/plain",
+                filename=f"{emp_id}_report.txt",
             )
         else:
-            raise HTTPException(status_code=404, detail=f"Report not found for employee {emp_id}")
+            raise HTTPException(
+                status_code=404, detail=f"Report not found for employee {emp_id}"
+            )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/list-reports")
 async def list_reports():
@@ -81,11 +95,13 @@ async def list_reports():
         reports = []
         for report_file in REPORTS_DIR.glob("*_report.txt"):
             emp_id = report_file.stem.replace("_report", "")
-            reports.append({
-                "employee_id": emp_id,
-                "report_path": str(report_file),
-                "created_at": report_file.stat().st_ctime
-            })
+            reports.append(
+                {
+                    "employee_id": emp_id,
+                    "report_path": str(report_file),
+                    "created_at": report_file.stat().st_ctime,
+                }
+            )
         return {"reports": reports}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
