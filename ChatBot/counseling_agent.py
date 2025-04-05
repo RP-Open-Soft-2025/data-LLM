@@ -3,7 +3,7 @@ from agno.models.groq import Groq
 import re
 from agno.models.google import Gemini
 from agno.tools.thinking import ThinkingTools
-from .prompt_templates import (
+from prompt_templates import (
     COUNSELING_SYSTEM_PROMPT,
     QUESTION_GENERATION_PROMPT,
     QUESTION_GENERATION_PROMPT_WHEN_CONTEXT,
@@ -47,6 +47,7 @@ class CounselingAgent:
 
         self.conversation_history = []
         self.is_interview_complete = False
+        self.is_escalated_to_hr = False
 
     def _get_response_text(self, run_response):
         """
@@ -121,6 +122,7 @@ class CounselingAgent:
 
         Returns:
             The next question to ask, or an indication that the interview is complete
+            or has been escalated to HR
         """
         self.conversation_history.append({"role": "employee", "content": user_response})
 
@@ -168,6 +170,12 @@ class CounselingAgent:
         ):
             self.is_interview_complete = True
             return None
+        elif response_text.startswith('"ESCALATED_TO_HR:') or response_text.startswith(
+            "ESCALATED_TO_HR:"
+        ):
+            self.is_interview_complete = True
+            self.is_escalated_to_hr = True
+            return None
         elif response_text.startswith("CONTINUE:"):
             next_question = response_text.replace("CONTINUE:", "").strip()
             self.conversation_history.append(
@@ -184,6 +192,12 @@ class CounselingAgent:
 
     def _extract_question(self, text):
         """Extract the question from the model response"""
+        # Remove prefix markers if present
+        if text.startswith("COMPLETE:"):
+            text = text[len("COMPLETE:") :].strip()
+        elif text.startswith("ESCALATED_TO_HR:"):
+            text = text[len("ESCALATED_TO_HR:") :].strip()
+
         # Simple heuristic: look for sentence ending with question mark
         sentences = re.split(r"(?<=[.!?])\s+", text)
         for sentence in sentences:
@@ -225,3 +239,12 @@ class CounselingAgent:
         # Generate the report
         response = self.agent.run(prompt)
         return self._get_response_text(response)
+
+    def is_escalated(self):
+        """
+        Check if the conversation was escalated to HR.
+
+        Returns:
+            True if the conversation was escalated to HR, False otherwise
+        """
+        return self.is_escalated_to_hr

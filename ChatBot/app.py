@@ -46,7 +46,9 @@ def main():
         os.getenv("GEMINI_API_KEY")
 
         # This would normally be retrieved from a database
-        context = ""  # Empty for now, would be populated from MongoDB in a real scenario
+        context = (
+            ""  # Empty for now, would be populated from MongoDB in a real scenario
+        )
 
         counseling_agent = CounselingAgent(
             model_id=config.MODEL_ID,
@@ -94,19 +96,37 @@ def main():
                 if choice != "try":
                     return
 
-        print(current_question)  # Print the completion message
+        # Print the completion or escalation message
+        print(f"Counselor: {current_question}")
+
+        # Display appropriate status message
+        if conversation_manager.is_conversation_escalated():
+            print("\n----- Session Escalated to HR -----")
+            print(
+                "This session has been flagged for immediate HR attention due to concerns about employee well-being."
+            )
+            report_type = "escalation"
+        else:
+            print("\n----- Counseling Session Complete -----")
+            print("All relevant topics have been explored successfully.")
+            report_type = "standard"
 
         # Generate and display the report
-        print("\n----- Generating Comprehensive Report -----\n")
+        print(f"\n----- Generating {report_type.title()} Report -----\n")
         try:  # Add try-except around report generation
             report = conversation_manager.generate_final_report()
             print(report)
 
             # Save the report to a file
-            with open("employee_counseling_report.md", "w") as f:
+            filename = "employee_counseling_report.md"
+            with open(filename, "w") as f:
                 f.write(report)
 
-            print("\nReport saved to 'employee_counseling_report.md'")
+            print(f"\nReport saved to '{filename}'")
+
+            if conversation_manager.is_conversation_escalated():
+                print("\nNOTE: This case has been marked for urgent HR follow-up.")
+
         except Exception as e:
             print(f"Error generating report: {str(e)}")
             print(traceback.format_exc())
