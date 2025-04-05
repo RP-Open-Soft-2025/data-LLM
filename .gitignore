@@ -133,6 +133,7 @@ dmypy.json
 .vercel
 .gcloudignore
 .data
+.vscode
 
 ChatBot/tmp
 ChatBot/employee_counseling_report.md
