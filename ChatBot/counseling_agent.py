@@ -82,7 +82,7 @@ class CounselingAgent:
         """
         # Retrieve relevant information from both knowledge bases
         employee_data = self.kb_manager.retrieve_from_employee_data(
-            "employee profile summary", num_documents=1
+            "Please extract all the issues from the text", num_documents=1
         )
         question_templates = self.kb_manager.retrieve_from_questions(
             "initial counseling questions", num_documents=1
