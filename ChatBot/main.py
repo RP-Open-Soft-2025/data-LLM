@@ -4,7 +4,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import config
+from . import config
 from pathlib import Path
 
 # Try the updated version first, if it fails, use the simpler version

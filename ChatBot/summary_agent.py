@@ -10,7 +10,7 @@ from agno.agent import Agent
 from agno.models.google import Gemini
 
 # Import configuration settings
-from config import MODEL_ID, GEMINI_API_KEY
+from .config import MODEL_ID, GEMINI_API_KEY
 
 # Load environment variables from .env file
 load_dotenv()
