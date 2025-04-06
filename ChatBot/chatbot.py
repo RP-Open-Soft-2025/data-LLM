@@ -46,9 +46,8 @@ GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "key.json"
 
 class SessionRequest(BaseModel):
-    employee_id: str
     session_id: str
-    chain_id: Optional[str] = None
+    chain_id: str
     context: Optional[str] = None
 
 class SessionResponse(BaseModel):
@@ -84,7 +83,7 @@ class ChainEscalationRequest(BaseModel):
     chain_id: str
     reason: str
 
-def initialize_session(employee_id: str, session_id: str, background_tasks: BackgroundTasks, chain_id: Optional[str] = None, context: Optional[str] = None):
+def initialize_session(chain_id: str, session_id: str, background_tasks: BackgroundTasks, context: Optional[str] = None):
     try:
         # Check if required files exist
         questions_pdf_path = Path(__file__).parent.parent / "ChatBot" / config.QUESTIONS_PDF_PATH
@@ -92,10 +91,10 @@ def initialize_session(employee_id: str, session_id: str, background_tasks: Back
             raise Exception(f"Error: Questions PDF file not found at {questions_pdf_path}")
         
         # Check if employee report exists
-        report_path = REPORTS_DIR / f"{employee_id}_report.txt"
+        report_path = REPORTS_DIR / f"{chain_id}_report.txt"
         print(f"Looking for report at: {report_path}")
         if not report_path.exists():
-            raise Exception(f"Error: Employee report not found for ID {employee_id}")
+            raise Exception(f"Error: Employee report not found for ID {chain_id}")
 
         print(f"Employee report found at {report_path}")
         
@@ -104,7 +103,7 @@ def initialize_session(employee_id: str, session_id: str, background_tasks: Back
         kb_manager = KnowledgeBaseManager(
             employee_data_path=str(report_path),
             questions_pdf_path=str(questions_pdf_path),
-            db_uri=f"tmp/counselling_db_{employee_id}"
+            db_uri=f"tmp/counselling_db_{chain_id}"
         )
         
         # Load knowledge bases - will skip if already loaded
@@ -120,7 +119,8 @@ def initialize_session(employee_id: str, session_id: str, background_tasks: Back
             model_id=config.MODEL_ID,
             kb_manager=kb_manager,
             system_prompt=config.CUSTOM_SYSTEM_PROMPT,
-            context=agent_context
+            context=agent_context,
+            report_file_path=report_path
         )
         
         # Initialize conversation manager 
@@ -132,10 +132,9 @@ def initialize_session(employee_id: str, session_id: str, background_tasks: Back
         # Store the session
         active_sessions[session_id] = {
             "conversation_manager": conversation_manager,
-            "employee_id": employee_id,
+            "chain_id": chain_id,
             "complete": False,
             "escalated": False,
-            "chain_id": chain_id,
             "context": context,
             "messages": [],
             "start_time": datetime.now(),
@@ -197,10 +196,9 @@ async def health_check():
 async def start_session(request: SessionRequest, background_tasks: BackgroundTasks):
     try:
         first_message = initialize_session(
-            request.employee_id, 
+            request.chain_id, 
             request.session_id, 
             background_tasks, 
-            request.chain_id, 
             request.context
         )
         return {"session_id": request.session_id, "message": first_message}
@@ -259,7 +257,7 @@ async def process_message(request: MessageRequest):
             
             # Save the report to a file
             report_path = save_report_to_gcs(
-                session["employee_id"],
+                session["chain_id"],
                 request.session_id,
                 report,
                 session["escalated"]
@@ -353,7 +351,7 @@ async def get_report(session_id: str):
         return {
             "report": session["report"],
             "escalated": session.get("escalated", False),
-            "employee_id": session["employee_id"],
+            "chain_id": session["chain_id"],
             "report_type": "escalation" if session.get("escalated", False) else "standard",
             "report_file_path": session.get("report_file_path")
         }
@@ -373,7 +371,7 @@ async def get_session_status(session_id: str):
         
         return {
             "session_id": session_id,
-            "employee_id": session["employee_id"],
+            "chain_id": session["chain_id"],
             "complete": session["complete"],
             "escalated": session.get("escalated", False),
             "message_count": len(session["messages"]),

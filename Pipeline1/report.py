@@ -15,6 +15,7 @@ REPORTS_DIR.mkdir(exist_ok=True)
 
 class EmployeeDataRequest(BaseModel):
     employee_data: Dict[str, Any]
+    chain_id: str
 
 
 @router.post("/analyze")
@@ -29,9 +30,15 @@ async def analyze_employee_data(request: EmployeeDataRequest):
             raise HTTPException(
                 status_code=400, detail="Employee ID is required in the request data"
             )
+        
+        chain_id = request.chain_id
+        if not chain_id:
+            raise HTTPException(
+                status_code=400, detail="Chain ID is required in the request data"
+            )
 
         # Initialize the state
-        initial_state = {"employee_data": request.employee_data, "status": "started"}
+        initial_state = {"employee_data": request.employee_data, "chain_id": chain_id, "status": "started"}
 
         print("Starting employee analysis...", initial_state)
 
@@ -49,7 +56,7 @@ async def analyze_employee_data(request: EmployeeDataRequest):
             )
 
         # Generate report filename using employee ID
-        report_filename = f"{emp_id}_report.txt"
+        report_filename = f"{chain_id}_report.txt"
         report_path = REPORTS_DIR / report_filename
 
         # Save the report
@@ -65,22 +72,22 @@ async def analyze_employee_data(request: EmployeeDataRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/download-report/{emp_id}")
-async def download_report(emp_id: str):
+@router.get("/download-report/{chain_id}")
+async def download_report(chain_id: str):
     """
     Download the generated report file for a specific employee.
     """
     try:
-        report_path = REPORTS_DIR / f"{emp_id}_report.txt"
+        report_path = REPORTS_DIR / f"{chain_id}_report.txt"
         if report_path.exists():
             return FileResponse(
                 str(report_path),
                 media_type="text/plain",
-                filename=f"{emp_id}_report.txt",
+                filename=f"{chain_id}_report.txt",
             )
         else:
             raise HTTPException(
-                status_code=404, detail=f"Report not found for employee {emp_id}"
+                status_code=404, detail=f"Report not found with chain_id {chain_id}"
             )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -94,10 +101,10 @@ async def list_reports():
     try:
         reports = []
         for report_file in REPORTS_DIR.glob("*_report.txt"):
-            emp_id = report_file.stem.replace("_report", "")
+            chain_id = report_file.stem.replace("_report", "")
             reports.append(
                 {
-                    "employee_id": emp_id,
+                    "chain_id": chain_id,
                     "report_path": str(report_file),
                     "created_at": report_file.stat().st_ctime,
                 }
@@ -105,3 +112,16 @@ async def list_reports():
         return {"reports": reports}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/report-exists/{chain_id}")
+async def report_exists(chain_id: str):
+    """
+    Get the report for a specific chain ID.
+    """
+
+    report_path = REPORTS_DIR / f"{chain_id}_report.txt"
+    if report_path.exists():
+        return {"exists": True}
+    else:
+        return {"exists": False}

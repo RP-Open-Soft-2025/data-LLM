@@ -8,9 +8,11 @@ load_dotenv()
 # API Keys
 # GROQ_API_KEY = "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"  # Replace with your actual API key
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")  # Load from environment variable
+OPEN_AI_API_KEY = os.getenv("OPENAI_API_KEY")  # Load from environment variable
 
 # Model settings
-MODEL_ID = "gemini-1.5-flash"  # Updated to use Gemini model
+# MODEL_ID = "gemini-1.5-flash"  # Updated to use Gemini model
+MODEL_ID = "gpt-4o-mini"  # Updated to use Gemini model
 
 # File paths
 EMPLOYEE_DATA_PATH = (
