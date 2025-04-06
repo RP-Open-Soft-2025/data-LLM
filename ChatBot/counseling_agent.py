@@ -19,7 +19,7 @@ load_dotenv()
 
 
 class CounselingAgent:
-    def __init__(self, model_id, kb_manager, system_prompt=None, context=None):
+    def __init__(self, model_id, kb_manager, system_prompt=None, context=None, report_file_path=None):
         """
         Initialize the counseling agent.
 
@@ -49,9 +49,12 @@ class CounselingAgent:
 
         The most appropriate questions to ask the given employee based on the context:
         """
-
-        with open(config.EMPLOYEE_DATA_PATH, "r") as file:
-            self.employee_data = file.read()
+        if report_file_path:
+            with open(report_file_path, "r") as file:
+                self.employee_data = file.read()
+        else:
+            with open(config.EMPLOYEE_DATA_PATH, "r") as file:
+                self.employee_data = file.read()
 
         # Retrieve relevant information based on the conversation
         self.question_templates = self.kb_manager.retrieve_from_questions(
