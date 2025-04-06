@@ -15,6 +15,7 @@ REPORTS_DIR.mkdir(exist_ok=True)
 
 class EmployeeDataRequest(BaseModel):
     employee_data: Dict[str, Any]
+    chain_id: str
 
 
 @router.post("/analyze")
@@ -28,6 +29,13 @@ async def analyze_employee_data(request: EmployeeDataRequest):
         if not emp_id:
             raise HTTPException(
                 status_code=400, detail="Employee ID is required in the request data"
+            )
+        
+        chain_id = request.chain_id 
+
+        if not chain_id:
+            raise HTTPException(
+                status_code=400, detail="Chain ID is required in the request data"
             )
 
         # Initialize the state
@@ -49,7 +57,7 @@ async def analyze_employee_data(request: EmployeeDataRequest):
             )
 
         # Generate report filename using employee ID
-        report_filename = f"{emp_id}_report.txt"
+        report_filename = f"{chain_id}_report.txt"
         report_path = REPORTS_DIR / report_filename
 
         # Save the report
@@ -105,3 +113,16 @@ async def list_reports():
         return {"reports": reports}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/report-exists/{chain_id}")
+async def report_exists(chain_id: str):
+    """
+    Get the report for a specific chain ID.
+    """
+
+    report_path = REPORTS_DIR / f"{chain_id}_report.txt"
+    if report_path.exists():
+        return {"exists": True}
+    else:
+        return {"exists": False}
