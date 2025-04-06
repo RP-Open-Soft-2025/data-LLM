@@ -6,10 +6,18 @@ from agno.models.openai import OpenAIChat
 from agno.tools.thinking import ThinkingTools
 from .prompt_templates import (
     COUNSELING_SYSTEM_PROMPT,
-    QUESTION_GENERATION_PROMPT,
-    QUESTION_GENERATION_PROMPT_WHEN_CONTEXT,
-    NEXT_QUESTION_PROMPT,
-    REPORT_GENERATION_PROMPT,
+    INITIAL_QUESTION_DESCRIPTION,
+    CONTEXT_QUESTION_DESCRIPTION,
+    NEXT_QUESTION_DESCRIPTION,
+    REPORT_GENERATION_DESCRIPTION,
+    INITIAL_QUESTION_INSTRUCTIONS,
+    CONTEXT_QUESTION_INSTRUCTIONS,
+    NEXT_QUESTION_INSTRUCTIONS,
+    REPORT_GENERATION_INSTRUCTIONS,
+    INITIAL_QUESTION_QUERY,
+    CONTEXT_QUESTION_QUERY,
+    NEXT_QUESTION_QUERY,
+    REPORT_GENERATION_QUERY,
 )
 from dotenv import load_dotenv
 import os
@@ -19,12 +27,19 @@ load_dotenv()
 
 
 class CounselingAgent:
-    def __init__(self, model_id, kb_manager, system_prompt=None, context=None, report_file_path=None):
+    def __init__(
+        self,
+        model_id,
+        kb_manager,
+        system_prompt=None,
+        context=None,
+        report_file_path=None,
+    ):
         """
         Initialize the counseling agent.
 
         Args:
-            model_id: ID of the LLM to use (Gemini model ID)
+            model_id: ID of the LLM to use
             kb_manager: Knowledge base manager for retrieving relevant information
             system_prompt: Custom system prompt for the agent
             context: Previous conversation context/summary (if any)
@@ -35,20 +50,44 @@ class CounselingAgent:
         self.kb_manager = kb_manager
         self.context = context if context else ""
 
-        # Use Gemini model with API key from environment variables
-        # api_key = os.getenv("GEMINI_API_KEY")
-        # model = Gemini(id=model_id, api_key=api_key)
-
+        # Set up the model
         api_key = os.getenv("OPENAI_API_KEY")
         model = OpenAIChat(id=model_id, api_key=api_key)
 
+        # Initialize specialized agents for different tasks
+        self.initial_agent = Agent(
+            model=model,
+            description=INITIAL_QUESTION_DESCRIPTION,
+            instructions=INITIAL_QUESTION_INSTRUCTIONS,
+            tools=[ThinkingTools()],
+            markdown=True,
+        )
 
-        search_query = f"""
-        Summary of chat history of an employee's counselling sessions (note that this can be empty):
-        {context}
+        self.context_agent = Agent(
+            model=model,
+            description=CONTEXT_QUESTION_DESCRIPTION,
+            instructions=CONTEXT_QUESTION_INSTRUCTIONS,
+            tools=[ThinkingTools()],
+            markdown=True,
+        )
 
-        The most appropriate questions to ask the given employee based on the context:
-        """
+        self.next_question_agent = Agent(
+            model=model,
+            description=NEXT_QUESTION_DESCRIPTION,
+            instructions=NEXT_QUESTION_INSTRUCTIONS,
+            tools=[ThinkingTools()],
+            markdown=True,
+        )
+
+        self.report_agent = Agent(
+            model=model,
+            description=REPORT_GENERATION_DESCRIPTION,
+            instructions=REPORT_GENERATION_INSTRUCTIONS,
+            tools=[ThinkingTools()],
+            markdown=True,
+        )
+
+        # Prepare employee data
         if report_file_path:
             with open(report_file_path, "r") as file:
                 self.employee_data = file.read()
@@ -56,17 +95,15 @@ class CounselingAgent:
             with open(config.EMPLOYEE_DATA_PATH, "r") as file:
                 self.employee_data = file.read()
 
-        # Retrieve relevant information based on the conversation
+        # Retrieve relevant question templates
+        search_query = f"""
+        Summary of chat history of an employee's counselling sessions (note that this can be empty):
+        {context}
+
+        The most appropriate questions to ask the given employee based on the context:
+        """
         self.question_templates = self.kb_manager.retrieve_from_questions(
             search_query, num_documents=1
-        )
-
-        # Initialize the agent with the configured model
-        self.agent = Agent(
-            model=model,
-            tools=[ThinkingTools()],
-            markdown=True,
-            description=self.system_prompt,
         )
 
         self.conversation_history = []
@@ -113,22 +150,23 @@ class CounselingAgent:
             "initial counseling questions", num_documents=1
         )
 
-        # Choose prompt template based on context availability
+        # Use appropriate agent based on context availability
         if self.context:
-            # Use context-aware prompt template
-            prompt = QUESTION_GENERATION_PROMPT_WHEN_CONTEXT.format(
+            # Use context-aware agent
+            query = CONTEXT_QUESTION_QUERY.format(
                 employee_data=employee_data,
                 question_templates=question_templates,
                 context=self.context,
             )
+            response = self.context_agent.run(query)
         else:
-            # Use standard prompt template
-            prompt = QUESTION_GENERATION_PROMPT.format(
-                employee_data=employee_data, question_templates=question_templates
+            # Use standard initial question agent
+            query = INITIAL_QUESTION_QUERY.format(
+                employee_data=employee_data,
+                question_templates=question_templates,
             )
+            response = self.initial_agent.run(query)
 
-        # Generate the initial question
-        response = self.agent.run(prompt)
         response_text = self._get_response_text(response)
         initial_question = self._extract_question(response_text)
 
@@ -150,32 +188,24 @@ class CounselingAgent:
         """
         self.conversation_history.append({"role": "employee", "content": user_response})
 
-        recent_history = self.conversation_history
-
         # Create a condensed conversation history
         history_text = "\n".join(
             [
                 f"{'Counselor' if item['role'] == 'counselor' else 'Employee'}: {item['content']}"
-                for item in recent_history
+                for item in self.conversation_history
             ]
         )
 
-        # Check if we've had enough exchanges to complete the interview (minimum 5 questions)
-        counselor_turns = sum(
-            1 for item in self.conversation_history if item["role"] == "counselor"
-        )
-
-        # Create the prompt for the next question
-        prompt = NEXT_QUESTION_PROMPT.format(
+        # Create the query for next question generation
+        query = NEXT_QUESTION_QUERY.format(
             conversation_history=history_text,
             employee_data=self.employee_data,
             question_templates=self.question_templates,
             context=self.context,
-            # enough_turns=(counselor_turns >= 3),
         )
 
-        # Generate the next question or completion message
-        response = self.agent.run(prompt)
+        # Generate the next question using the next_question_agent
+        response = self.next_question_agent.run(query)
         response_text = self._get_response_text(response)
 
         if response_text.startswith('"COMPLETE:') or response_text.startswith(
@@ -235,20 +265,18 @@ class CounselingAgent:
             ]
         )
 
-        # Retrieve key employee information for the report
-        
+        # Limit history to avoid token limits
+        history_text = history_text[:1500]  # Limit the history to 1500 characters
 
-        # Create the prompt for the report generation
-        prompt = REPORT_GENERATION_PROMPT.format(
-            conversation_history=history_text[
-                :1500
-            ],  # Limit the history to 1500 characters
+        # Create the query for report generation
+        query = REPORT_GENERATION_QUERY.format(
+            conversation_history=history_text,
             employee_data=self.employee_data,
             context=self.context,
         )
 
-        # Generate the report
-        response = self.agent.run(prompt)
+        # Generate the report using the report_agent
+        response = self.report_agent.run(query)
         return self._get_response_text(response)
 
     def is_escalated(self):
