@@ -50,6 +50,7 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
+key.json
 
 # Translations
 *.mo
@@ -129,6 +130,10 @@ dmypy.json
 .pyre/
 .idea/
 .env
+
+# Temporary files
+tmp/
+emp_reports/
 
 .vercel
 .gcloudignore

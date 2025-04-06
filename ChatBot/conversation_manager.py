@@ -6,14 +6,22 @@ class ConversationManager:
         Args:
             counseling_agent: An instance of the CounselingAgent
         """
+        if not counseling_agent:
+            raise ValueError("Counseling agent must be provided")
+
         self.agent = counseling_agent
         self.is_complete = False
         self.is_escalated = False
 
     def start_conversation(self):
         """Start the counseling conversation"""
-        initial_question = self.agent.start_interview()
-        return initial_question
+        try:
+            initial_question = self.agent.start_interview()
+            if not initial_question:
+                raise RuntimeError("Counseling agent failed to provide an initial question.")
+            return initial_question
+        except Exception as e:
+            return f"Error starting conversation: {str(e)}"
 
     def handle_response(self, user_response):
         """
@@ -23,20 +31,38 @@ class ConversationManager:
             user_response: The user's response to the previous question
 
         Returns:
-            The next question or None if the conversation is complete or escalated
+            The next question or a closing message if the conversation is complete or escalated
         """
-        next_question = self.agent.process_response(user_response)
+        if not isinstance(user_response, str) or not user_response.strip():
+            return "Invalid response. Please provide a non-empty message."
 
-        if next_question is None:
-            self.is_complete = True
-            self.is_escalated = self.agent.is_escalated()
+        try:
+            next_question = self.agent.process_response(user_response)
 
-            if self.is_escalated:
-                return "This conversation needs immediate attention from HR. I'll make sure your concerns are addressed promptly. Thank you for sharing your experiences."
+            if next_question is None:
+                self.is_complete = True
+
+                try:
+                    self.is_escalated = self.agent.is_escalated()
+                except Exception as e:
+                    return f"Error determining escalation status: {str(e)}"
+
+                if self.is_escalated:
+                    return (
+                        "This conversation needs immediate attention from HR. "
+                        "I'll make sure your concerns are addressed promptly. "
+                        "Thank you for sharing your experiences."
+                    )
+                else:
+                    return (
+                        "Thank you for your responses. I now have enough information "
+                        "to generate a comprehensive report."
+                    )
             else:
-                return "Thank you for your responses. I now have enough information to generate a comprehensive report."
-        else:
-            return next_question
+                return next_question
+
+        except Exception as e:
+            return f"Error handling response: {str(e)}"
 
     def is_conversation_complete(self):
         """Check if the conversation is complete"""
@@ -47,11 +73,20 @@ class ConversationManager:
         return self.is_escalated
 
     def generate_final_report(self):
-        """Generate the final report"""
+        """
+        Generate the final report.
+
+        Raises:
+            ValueError: If the conversation is not complete
+            RuntimeError: If the agent fails to generate a report
+        """
         if not self.is_complete:
             raise ValueError("Cannot generate report before conversation is complete")
 
-        report_text = self.agent.generate_report()
+        try:
+            report_text = self.agent.generate_report()
+        except Exception as e:
+            raise RuntimeError(f"Failed to generate report: {str(e)}")
 
         # Add report header based on conversation outcome
         if self.is_escalated:
