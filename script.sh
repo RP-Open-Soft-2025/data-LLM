@@ -9,9 +9,6 @@
 
     location / {
       proxy_pass http://localhost:8080;
-      proxy_connect_timeout 300s;
-      proxy_read_timeout 300s;
-      proxy_send_timeout 300s;
     }
   }
   "
