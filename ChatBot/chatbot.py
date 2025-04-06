@@ -43,9 +43,8 @@ COUNSELLING_REPORTS_DIR.mkdir(exist_ok=True)
 BACKEND_API_URL = os.getenv("BACKEND_API_URL", "http://localhost:8000")
 
 class SessionRequest(BaseModel):
-    employee_id: str
     session_id: str
-    chain_id: Optional[str] = None
+    chain_id: str
     context: Optional[str] = None
 
 class SessionResponse(BaseModel):
@@ -81,7 +80,7 @@ class ChainEscalationRequest(BaseModel):
     chain_id: str
     reason: str
 
-def initialize_session(employee_id: str, session_id: str, background_tasks: BackgroundTasks, chain_id: Optional[str] = None, context: Optional[str] = None):
+def initialize_session(chain_id: str, session_id: str, background_tasks: BackgroundTasks, context: Optional[str] = None):
     try:
         # Check if required files exist
         questions_pdf_path = Path(__file__).parent.parent / "ChatBot" / config.QUESTIONS_PDF_PATH
@@ -92,7 +91,7 @@ def initialize_session(employee_id: str, session_id: str, background_tasks: Back
         report_path = REPORTS_DIR / f"{chain_id}_report.txt"
         print(f"Looking for report at: {report_path}")
         if not report_path.exists():
-            raise Exception(f"Error: Employee report not found for ID {employee_id}")
+            raise Exception(f"Error: Employee report not found for ID {chain_id}")
 
         print(f"Employee report found at {report_path}")
         
@@ -101,7 +100,7 @@ def initialize_session(employee_id: str, session_id: str, background_tasks: Back
         kb_manager = KnowledgeBaseManager(
             employee_data_path=str(report_path),
             questions_pdf_path=str(questions_pdf_path),
-            db_uri=f"tmp/counselling_db_{employee_id}"
+            db_uri=f"tmp/counselling_db_{chain_id}"
         )
         
         # Load knowledge bases - will skip if already loaded
@@ -117,7 +116,8 @@ def initialize_session(employee_id: str, session_id: str, background_tasks: Back
             model_id=config.MODEL_ID,
             kb_manager=kb_manager,
             system_prompt=config.CUSTOM_SYSTEM_PROMPT,
-            context=agent_context
+            context=agent_context,
+            report_file_path=report_path
         )
         
         # Initialize conversation manager 
@@ -129,10 +129,9 @@ def initialize_session(employee_id: str, session_id: str, background_tasks: Back
         # Store the session
         active_sessions[session_id] = {
             "conversation_manager": conversation_manager,
-            "employee_id": employee_id,
+            "chain_id": chain_id,
             "complete": False,
             "escalated": False,
-            "chain_id": chain_id,
             "context": context,
             "messages": [],
             "start_time": datetime.now(),
@@ -152,19 +151,19 @@ def initialize_session(employee_id: str, session_id: str, background_tasks: Back
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
-def save_report_to_file(employee_id: str, session_id: str, report: str, escalated: bool):
+def save_report_to_file(chain_id: str, session_id: str, report: str, escalated: bool):
     """Save the counseling report to a file."""
     try:
         # Create a filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         report_type = "escalated" if escalated else "standard"
-        filename = f"{employee_id}_{timestamp}_{report_type}.md"
+        filename = f"{chain_id}_{timestamp}_{report_type}.md"
         file_path = COUNSELLING_REPORTS_DIR / filename
         
         # Save the report to the file
         with open(file_path, "w") as f:
             # Add metadata at the top of the report
-            f.write(f"# Counseling Report for Employee {employee_id}\n\n")
+            f.write(f"# Counseling Report for Chain {chain_id}\n\n")
             f.write(f"Session ID: {session_id}\n")
             f.write(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
             f.write(f"Report Type: {report_type.title()}\n\n")
@@ -187,10 +186,9 @@ async def health_check():
 async def start_session(request: SessionRequest, background_tasks: BackgroundTasks):
     try:
         first_message = initialize_session(
-            request.employee_id, 
+            request.chain_id, 
             request.session_id, 
             background_tasks, 
-            request.chain_id, 
             request.context
         )
         return {"session_id": request.session_id, "message": first_message}
@@ -249,7 +247,7 @@ async def process_message(request: MessageRequest):
             
             # Save the report to a file
             report_path = save_report_to_file(
-                session["employee_id"],
+                session["chain_id"],
                 request.session_id,
                 report,
                 session["escalated"]
@@ -343,7 +341,7 @@ async def get_report(session_id: str):
         return {
             "report": session["report"],
             "escalated": session.get("escalated", False),
-            "employee_id": session["employee_id"],
+            "chain_id": session["chain_id"],
             "report_type": "escalation" if session.get("escalated", False) else "standard",
             "report_file_path": session.get("report_file_path")
         }
@@ -363,7 +361,7 @@ async def get_session_status(session_id: str):
         
         return {
             "session_id": session_id,
-            "employee_id": session["employee_id"],
+            "chain_id": session["chain_id"],
             "complete": session["complete"],
             "escalated": session.get("escalated", False),
             "message_count": len(session["messages"]),
