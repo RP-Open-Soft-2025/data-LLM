@@ -154,7 +154,7 @@ def initialize_session(chain_id: str, session_id: str, background_tasks: Backgro
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
-def save_report_to_gcs(employee_id: str, session_id: str, report: str, escalated: bool):
+def save_counselling_report_to_gcs(employee_id: str, session_id: str, report: str, escalated: bool):
     """Save the counseling report to a Google Cloud Storage bucket."""
     try:
         report_type = "escalated" if escalated else "standard"
@@ -256,7 +256,7 @@ async def process_message(request: MessageRequest):
             session["report"] = report
             
             # Save the report to a file
-            report_path = save_report_to_gcs(
+            report_path = save_counselling_report_to_gcs(
                 session["chain_id"],
                 request.session_id,
                 report,
