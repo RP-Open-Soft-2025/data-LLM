@@ -312,17 +312,18 @@ async def end_session(request: EndSessionRequest):
         updated_context = summarizer_agent.summarize_conversation(current_context, messages)
         
         # Update the chain context in the backend
-        try:
-            response = requests.post(
-                f"{BACKEND_API_URL}/update-chain-context",
-                json={"chain_id": request.chain_id, "context": updated_context}
-            )
-            if response.status_code != 200:
-                print(f"Error updating chain context: {response.text}")
-        except Exception as e:
-            print(f"Error calling update-chain-context endpoint: {str(e)}")
+        # try:
+        #     response = requests.post(
+        #         f"{BACKEND_API_URL}/update-chain-context",
+        #         json={"chain_id": request.chain_id, "context": updated_context}
+        #     )
+        #     if response.status_code != 200:
+        #         print(f"Error updating chain context: {response.text}")
+        # except Exception as e:
+        #     print(f"Error calling update-chain-context endpoint: {str(e)}")
         
         return {
+            "chain_id": request.chain_id,
             "updated_context": updated_context,
             "message": "Session ended successfully"
         }
