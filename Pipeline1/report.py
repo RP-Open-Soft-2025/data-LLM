@@ -101,10 +101,10 @@ async def list_reports():
     try:
         reports = []
         for report_file in REPORTS_DIR.glob("*_report.txt"):
-            emp_id = report_file.stem.replace("_report", "")
+            chain_id = report_file.stem.replace("_report", "")
             reports.append(
                 {
-                    "employee_id": emp_id,
+                    "chain_id": chain_id,
                     "report_path": str(report_file),
                     "created_at": report_file.stat().st_ctime,
                 }
