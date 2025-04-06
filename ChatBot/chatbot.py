@@ -89,7 +89,7 @@ def initialize_session(employee_id: str, session_id: str, background_tasks: Back
             raise Exception(f"Error: Questions PDF file not found at {questions_pdf_path}")
         
         # Check if employee report exists
-        report_path = REPORTS_DIR / f"{employee_id}_report.txt"
+        report_path = REPORTS_DIR / f"{chain_id}_report.txt"
         print(f"Looking for report at: {report_path}")
         if not report_path.exists():
             raise Exception(f"Error: Employee report not found for ID {employee_id}")
