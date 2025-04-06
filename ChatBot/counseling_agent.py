@@ -2,6 +2,7 @@ from agno.agent import Agent
 from agno.models.groq import Groq
 import re
 from agno.models.google import Gemini
+from agno.models.openai import OpenAIChat
 from agno.tools.thinking import ThinkingTools
 from .prompt_templates import (
     COUNSELING_SYSTEM_PROMPT,
@@ -35,8 +36,12 @@ class CounselingAgent:
         self.context = context if context else ""
 
         # Use Gemini model with API key from environment variables
-        api_key = os.getenv("GEMINI_API_KEY")
-        model = Gemini(id=model_id, api_key=api_key)
+        # api_key = os.getenv("GEMINI_API_KEY")
+        # model = Gemini(id=model_id, api_key=api_key)
+
+        api_key = os.getenv("OPENAI_API_KEY")
+        model = OpenAIChat(id=model_id, api_key=api_key)
+
 
         search_query = f"""
         Summary of chat history of an employee's counselling sessions (note that this can be empty):
@@ -163,7 +168,7 @@ class CounselingAgent:
             employee_data=self.employee_data,
             question_templates=self.question_templates,
             context=self.context,
-            enough_turns=(counselor_turns >= 3),
+            # enough_turns=(counselor_turns >= 3),
         )
 
         # Generate the next question or completion message
@@ -228,16 +233,14 @@ class CounselingAgent:
         )
 
         # Retrieve key employee information for the report
-        employee_data = self.kb_manager.retrieve_from_employee_data(
-            "employee performance summary leaves activity", num_documents=2
-        )
+        
 
         # Create the prompt for the report generation
         prompt = REPORT_GENERATION_PROMPT.format(
             conversation_history=history_text[
                 :1500
             ],  # Limit the history to 1500 characters
-            employee_data=employee_data,
+            employee_data=self.employee_data,
             context=self.context,
         )
 
