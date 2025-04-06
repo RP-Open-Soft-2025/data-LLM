@@ -8,7 +8,7 @@ import requests
 import json
 from typing import List, Optional
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timezone
 from google.cloud import storage
 
 # Load environment variables
@@ -30,7 +30,7 @@ router = APIRouter()
 active_sessions = {}
 
 # Initialize components
-summarizer_agent = SummarizerAgent()
+summarizer_agent = SummarizerAgent(model="gemini-1.5-flash")
 
 # Define reports directory paths
 REPORTS_DIR = Path(__file__).parent.parent / "emp_reports"
@@ -57,7 +57,7 @@ class SessionResponse(BaseModel):
 class MessageRequest(BaseModel):
     session_id: str
     message: str
-    chain_id: Optional[str] = None
+    chain_id: str = None
 
 class MessageResponse(BaseModel):
     message: str
@@ -145,7 +145,7 @@ def initialize_session(chain_id: str, session_id: str, background_tasks: Backgro
         active_sessions[session_id]["messages"].append({
             "sender": "bot",
             "text": first_question,
-            "timestamp": "now"  # In a real implementation, use actual timestamps
+            "timestamp": datetime.now(timezone.utc)
         })
         
         return first_question
@@ -224,7 +224,7 @@ async def process_message(request: MessageRequest):
         session["messages"].append({
             "sender": "employee",
             "text": request.message,
-            "timestamp": "now"  # In a real implementation, use actual timestamps
+            "timestamp": datetime.now(timezone.utc)
         })
         
         # Process the message
@@ -235,7 +235,7 @@ async def process_message(request: MessageRequest):
         session["messages"].append({
             "sender": "bot",
             "text": next_question,
-            "timestamp": "now"  # In a real implementation, use actual timestamps
+            "timestamp": datetime.now(timezone.utc)
         })
 
         complete_the_chain = False
@@ -245,7 +245,7 @@ async def process_message(request: MessageRequest):
         # Check if conversation is now complete
         if conversation_manager.is_conversation_complete():
             session["complete"] = True
-            session["end_time"] = datetime.now()
+            session["end_time"] = datetime.now(timezone.utc)
             
             # Check if conversation is escalated
             session["escalated"] = conversation_manager.is_conversation_escalated()
@@ -296,13 +296,18 @@ async def end_session(request: EndSessionRequest):
         if not session["end_time"]:
             session["end_time"] = datetime.now()
         
+        print(session)
+        
         # Get all messages from the session
         messages = []
         for msg in session["messages"]:
+            print(msg)
+            print(msg.keys())
+
             messages.append(Message(
                 sender_type=SenderType.EMPLOYEE if msg["sender"] == "employee" else SenderType.BOT,
                 text=msg["text"],
-                timestamp=msg["timestamp"]  # In a real implementation, use actual timestamps
+                timestamp=msg["timestamp"]
             ))
         
         # Get the current context
