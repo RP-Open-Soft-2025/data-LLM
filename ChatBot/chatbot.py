@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 from datetime import datetime, timezone
 from google.cloud import storage
 
+from .daily_report import SummarizerAgent
+
 # Load environment variables
 load_dotenv()
 
@@ -186,6 +188,20 @@ def save_counselling_report_to_gcs(employee_id: str, session_id: str, report: st
         print(traceback.format_exc())
         return None
 
+def save_session_report_to_gcs(chain_id: str, session_id: str, report: str):
+    """Save the counseling report to a Google Cloud Storage bucket."""
+    try:
+        filename = f"{chain_id}_{session_id}_report.md"
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(GCS_BUCKET_NAME)
+        blob = bucket.blob(filename)
+        blob.upload_from_string(report, content_type="text/markdown")
+        print(f"Report uploaded to GCS as {filename}")
+        return f"gs://{GCS_BUCKET_NAME}/{filename}"
+    except Exception as e:
+        print(f"Error uploading report to GCS: {str(e)}")
+        print(traceback.format_exc())
+        return None
 
 # health check
 @router.get("/")
@@ -316,16 +332,26 @@ async def end_session(request: EndSessionRequest):
         # Summarize the conversation
         updated_context = summarizer_agent.summarize_conversation(current_context, messages)
         
-        # Update the chain context in the backend
-        # try:
-        #     response = requests.post(
-        #         f"{BACKEND_API_URL}/update-chain-context",
-        #         json={"chain_id": request.chain_id, "context": updated_context}
-        #     )
-        #     if response.status_code != 200:
-        #         print(f"Error updating chain context: {response.text}")
-        # except Exception as e:
-        #     print(f"Error calling update-chain-context endpoint: {str(e)}")
+        session["complete"] = True
+        session["end_time"] = datetime.now(timezone.utc)
+
+        msgs = [
+            Message(
+                sender_type=SenderType.EMPLOYEE,
+                text=request.message,
+                timestamp=datetime.now(timezone.utc)
+            ) for msg in session["messages"]
+        ]
+        
+        report = SummarizerAgent.generate_daily_report(updated_context, msgs)
+
+        # Save the report to a file
+        report_path = save_session_report_to_gcs(
+            request.chain_id,
+            request.session_id,
+            report
+        )
+        session["report_file_path"] = report_path
         
         return {
             "chain_id": request.chain_id,
