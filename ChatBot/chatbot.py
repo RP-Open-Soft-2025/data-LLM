@@ -191,7 +191,7 @@ def save_counselling_report_to_gcs(chain_id: str, session_id: str, report: str, 
         print(traceback.format_exc())
         return None
 
-def save_session_report_to_gcs(session_id: str, employee_id: str, report: str):
+def save_session_report_to_gcs(session_id: str, report: str):
     """Save the counseling report to a Google Cloud Storage bucket."""
     try:
         filename = f"{session_id}.md"
@@ -278,7 +278,6 @@ async def process_message(request: MessageRequest):
             report_path = save_counselling_report_to_gcs(
                 request.chain_id,                
                 request.session_id,
-                request.employee_id,
                 report,
                 session["escalated"]
             )
@@ -358,7 +357,6 @@ async def end_session(request: EndSessionRequest):
         # Save the report to a file
         report_path = save_session_report_to_gcs(
             request.session_id,
-            request.chain_id,
             report
         )
         session["report_file_path"] = report_path
