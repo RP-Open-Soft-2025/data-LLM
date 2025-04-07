@@ -22,6 +22,7 @@ from .prompt_templates import (
 from dotenv import load_dotenv
 import os
 from . import config
+from .empathizer_agent import EmpathizerAgent
 
 load_dotenv()
 
@@ -87,6 +88,9 @@ class CounselingAgent:
             tools=[ThinkingTools()],
             markdown=True,
         )
+
+        # Initialize the empathizer agent with a lightweight model
+        self.empathizer_agent = EmpathizerAgent()
 
         # Prepare employee data
         if report_file_path:
@@ -197,12 +201,18 @@ class CounselingAgent:
             ]
         )
 
+        # # Generate empathetic response using the empathizer agent
+        empathetic_response = self.empathizer_agent.generate_empathetic_response(
+            self.conversation_history
+        )
+
         # Create the query for next question generation
         query = NEXT_QUESTION_QUERY.format(
             conversation_history=history_text,
             employee_data=self.employee_data,
             question_templates=self.question_templates,
             context=self.context,
+            empathetic_response=empathetic_response,
         )
 
         # Generate the next question using the next_question_agent
@@ -232,7 +242,7 @@ class CounselingAgent:
             self.conversation_history.append(
                 {"role": "counselor", "content": next_question}
             )
-            return next_question
+            return "{empathetic_response} {next_question}".format(empathetic_response = empathetic_response, next_question = next_question)
 
     def _extract_question(self, text):
         """Extract the question from the model response"""

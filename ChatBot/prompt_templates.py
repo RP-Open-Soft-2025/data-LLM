@@ -138,7 +138,10 @@ Check if ALL issues from the employee data have been explored. If yes, prepare t
 Before responding, check the employee's last 3-4 messages for any signs of severe distress that would require HR escalation.
 
 DO NOT REPEAT questions that have already been asked. Ensure each question provides new value.
-"""
+
+# Your next response as the empathetic, supportive HR professional:
+
+{empathetic_response} """
 
 REPORT_GENERATION_QUERY = """
 Based on the following counseling conversation, employee data, and previous context (if available), generate a comprehensive well-being report:

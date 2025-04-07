@@ -59,7 +59,6 @@ class SessionResponse(BaseModel):
 
 class MessageRequest(BaseModel):
     session_id: str
-    employee_id: str
     message: str
     chain_id: str = None
 
