@@ -4,8 +4,7 @@ import re
 from agno.models.google import Gemini
 from agno.models.openai import OpenAIChat
 from agno.tools.thinking import ThinkingTools
-from .prompt_templates import (
-    COUNSELING_SYSTEM_PROMPT,
+from .prompt_templates1 import (
     INITIAL_QUESTION_DESCRIPTION,
     CONTEXT_QUESTION_DESCRIPTION,
     NEXT_QUESTION_DESCRIPTION,
@@ -22,6 +21,7 @@ from .prompt_templates import (
 from dotenv import load_dotenv
 import os
 from . import config
+import re
 
 load_dotenv()
 
@@ -44,20 +44,19 @@ class CounselingAgent:
             system_prompt: Custom system prompt for the agent
             context: Previous conversation context/summary (if any)
         """
-        self.system_prompt = (
-            system_prompt if system_prompt else COUNSELING_SYSTEM_PROMPT
-        )
         self.kb_manager = kb_manager
         self.context = context if context else ""
 
         # Set up the model
         api_key = os.getenv("OPENAI_API_KEY")
-        print("API KEY: ", api_key)
         model = OpenAIChat(id=model_id, api_key=api_key)
 
         # Initialize specialized agents for different tasks
         self.initial_agent = Agent(
             model=model,
+            add_history_to_messages=True,
+            # Number of historical responses to add to the messages.
+            num_history_responses=15,
             description=INITIAL_QUESTION_DESCRIPTION,
             instructions=INITIAL_QUESTION_INSTRUCTIONS,
             tools=[ThinkingTools()],
@@ -66,22 +65,24 @@ class CounselingAgent:
 
         self.context_agent = Agent(
             model=model,
+            add_history_to_messages=True,
+            # Number of historical responses to add to the messages.
+            num_history_responses=15,
             description=CONTEXT_QUESTION_DESCRIPTION,
             instructions=CONTEXT_QUESTION_INSTRUCTIONS,
             tools=[ThinkingTools()],
             markdown=True,
         )
 
-        self.next_question_agent = Agent(
-            model=model,
-            description=NEXT_QUESTION_DESCRIPTION,
-            instructions=NEXT_QUESTION_INSTRUCTIONS,
-            tools=[ThinkingTools()],
-            markdown=True,
-        )
+        # We'll initialize next_question_agent in process_response
+        # to format the instructions with actual conversation history and employee data
+        self.next_question_agent = None
 
         self.report_agent = Agent(
             model=model,
+            add_history_to_messages=True,
+            # Number of historical responses to add to the messages.
+            num_history_responses=15,
             description=REPORT_GENERATION_DESCRIPTION,
             instructions=REPORT_GENERATION_INSTRUCTIONS,
             tools=[ThinkingTools()],
@@ -96,12 +97,18 @@ class CounselingAgent:
             with open(config.EMPLOYEE_DATA_PATH, "r") as file:
                 self.employee_data = file.read()
 
+        # Extract and store issues from employee data
+        self.issues = self._extract_issues_from_data()
+        self.current_topic = None
+        self.topic_questions_count = {}  # Track questions per topic
+        self.explored_topics = set()  # Keep track of fully explored topics
+
         # Retrieve relevant question templates
         search_query = f"""
         Summary of chat history of an employee's counselling sessions (note that this can be empty):
         {context}
 
-        Please find questions that are not covered with reference to the above context
+        The most appropriate questions to ask the given employee based on the context:
         """
         self.question_templates = self.kb_manager.retrieve_from_questions(
             search_query, num_documents=1
@@ -110,6 +117,29 @@ class CounselingAgent:
         self.conversation_history = []
         self.is_interview_complete = False
         self.is_escalated_to_hr = False
+
+        # Store the model reference for creating agents later
+        self.model = model
+
+    def _extract_issues_from_data(self):
+        """Extract the main issues from employee data"""
+        issues = []
+        # Looking for issue patterns like "Issue 1:", "Issue 2:", etc.
+        issue_pattern = r"Issue \d+:(.*?)(?=Issue \d+:|$)"
+        matches = re.findall(issue_pattern, self.employee_data, re.DOTALL)
+
+        if matches:
+            for match in matches:
+                issues.append(match.strip())
+        else:
+            # Fallback: try to find "**Issue" format
+            issue_pattern = r"\*\*Issue \d+:(.*?)(?=\*\*Issue \d+:|$)"
+            matches = re.findall(issue_pattern, self.employee_data, re.DOTALL)
+            if matches:
+                for match in matches:
+                    issues.append(match.strip())
+
+        return issues if issues else ["general well-being"]  # Fallback topic
 
     def _get_response_text(self, run_response):
         """
@@ -171,6 +201,11 @@ class CounselingAgent:
         response_text = self._get_response_text(response)
         initial_question = self._extract_question(response_text)
 
+        # Set the initial topic as the first issue
+        if self.issues:
+            self.current_topic = self.issues[0]
+            self.topic_questions_count[self.current_topic] = 1
+
         self.conversation_history.append(
             {"role": "counselor", "content": initial_question}
         )
@@ -197,12 +232,67 @@ class CounselingAgent:
             ]
         )
 
+        # Determine if we need to change topics based on question count
+        if self.current_topic and self.current_topic in self.topic_questions_count:
+            if (
+                self.topic_questions_count[self.current_topic] >= 4
+            ):  # Max questions per topic
+                self.explored_topics.add(self.current_topic)
+                # Find a new unexplored topic
+                for topic in self.issues:
+                    if topic not in self.explored_topics:
+                        self.current_topic = topic
+                        self.topic_questions_count[self.current_topic] = 0
+                        break
+                # If all topics explored, mark interview as complete
+                if all(topic in self.explored_topics for topic in self.issues):
+                    self.is_interview_complete = True
+                    return None
+
+        # Update agent with topic tracking information
+        topic_status = f"""
+        TOPIC TRACKING:
+        - Current topic: {self.current_topic}
+        - Questions asked on current topic: {self.topic_questions_count.get(self.current_topic, 0)}
+        - Topics explored: {', '.join(self.explored_topics) if self.explored_topics else 'None'}
+        - Remaining topics: {', '.join(topic for topic in self.issues if topic not in self.explored_topics)}
+        
+        REMEMBER: MUST change topics after 4 questions.
+        """
+
+        # Format the NEXT_QUESTION_INSTRUCTIONS with current conversation history and employee data
+        formatted_instructions = []
+        for instruction in NEXT_QUESTION_INSTRUCTIONS:
+            formatted_instructions.append(
+                instruction.format(
+                    conversation_history=history_text, employee_data=self.employee_data
+                )
+            )
+
+        # Add the topic tracking information to instructions
+        formatted_instructions.append(topic_status)
+
+        # Create or update the next_question_agent with formatted instructions
+        self.next_question_agent = Agent(
+            model=self.model,
+            add_history_to_messages=True,
+            num_history_responses=15,
+            description=NEXT_QUESTION_DESCRIPTION,
+            instructions=formatted_instructions,
+            tools=[ThinkingTools()],
+            markdown=True,
+        )
+
         # Create the query for next question generation
-        query = NEXT_QUESTION_QUERY.format(
-            conversation_history=history_text,
-            employee_data=self.employee_data,
-            question_templates=self.question_templates,
-            context=self.context,
+        query = (
+            NEXT_QUESTION_QUERY.format(
+                conversation_history=history_text,
+                employee_data=self.employee_data,
+                question_templates=self.question_templates,
+                context=self.context,
+            )
+            + "\n"
+            + topic_status
         )
 
         # Generate the next question using the next_question_agent
@@ -225,6 +315,11 @@ class CounselingAgent:
             self.conversation_history.append(
                 {"role": "counselor", "content": next_question}
             )
+            # Update question count for current topic
+            if self.current_topic:
+                self.topic_questions_count[self.current_topic] = (
+                    self.topic_questions_count.get(self.current_topic, 0) + 1
+                )
             return next_question
         else:
             # If the model doesn't follow the format, extract the likely question
@@ -232,6 +327,11 @@ class CounselingAgent:
             self.conversation_history.append(
                 {"role": "counselor", "content": next_question}
             )
+            # Update question count for current topic
+            if self.current_topic:
+                self.topic_questions_count[self.current_topic] = (
+                    self.topic_questions_count.get(self.current_topic, 0) + 1
+                )
             return next_question
 
     def _extract_question(self, text):
