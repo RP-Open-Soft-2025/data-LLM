@@ -11,7 +11,7 @@ from agno.agent import Agent
 from agno.models.openai import OpenAIChat
 
 # Import configuration settings
-from config import MODEL_ID, OPEN_AI_API_KEY
+from .config import MODEL_ID, OPEN_AI_API_KEY
 
 # Load environment variables from .env file
 load_dotenv()
