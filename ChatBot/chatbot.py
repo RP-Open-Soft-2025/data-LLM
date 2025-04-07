@@ -59,6 +59,7 @@ class SessionResponse(BaseModel):
 
 class MessageRequest(BaseModel):
     session_id: str
+    employee_id: str
     message: str
     chain_id: str = None
 
@@ -68,6 +69,7 @@ class MessageResponse(BaseModel):
 class EndSessionRequest(BaseModel):
     session_id: str
     chain_id: str
+    employee_id: str
     current_context: Optional[str] = None
 
 class EndSessionResponse(BaseModel):
@@ -157,15 +159,15 @@ def initialize_session(chain_id: str, session_id: str, background_tasks: Backgro
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
-def save_counselling_report_to_gcs(employee_id: str, session_id: str, report: str, escalated: bool):
+def save_counselling_report_to_gcs(chain_id: str, session_id: str, employee_id: str, report: str, escalated: bool):
     """Save the counseling report to a Google Cloud Storage bucket."""
     try:
         report_type = "escalated" if escalated else "standard"
-        filename = f"chain_{employee_id}_{session_id}_{report_type}.md"
+        filename = f"counselling_report_{report_type}_{chain_id}_{session_id}_{employee_id}.md"
 
         # Compose the content of the report
         content = (
-            f"# Counseling Report for Employee {employee_id}\n\n"
+            f"# Counseling Report for Employee {chain_id}\n\n"
             f"Session ID: {session_id}\n"
             f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
             f"Report Type: {report_type.title()}\n\n"
@@ -189,10 +191,10 @@ def save_counselling_report_to_gcs(employee_id: str, session_id: str, report: st
         print(traceback.format_exc())
         return None
 
-def save_session_report_to_gcs(chain_id: str, session_id: str, report: str):
+def save_session_report_to_gcs(session_id: str, employee_id: str, report: str):
     """Save the counseling report to a Google Cloud Storage bucket."""
     try:
-        filename = f"session_{chain_id}_{session_id}.md"
+        filename = f"session_report_{session_id}_{employee_id}.md"
         storage_client = storage.Client()
         bucket = storage_client.bucket(GCS_BUCKET_NAME)
         blob = bucket.blob(filename)
@@ -274,8 +276,9 @@ async def process_message(request: MessageRequest):
             
             # Save the report to a file
             report_path = save_counselling_report_to_gcs(
-                session["chain_id"],
+                request.chain_id,                
                 request.session_id,
+                request.employee_id,
                 report,
                 session["escalated"]
             )
@@ -354,8 +357,8 @@ async def end_session(request: EndSessionRequest):
 
         # Save the report to a file
         report_path = save_session_report_to_gcs(
-            request.chain_id,
             request.session_id,
+            request.chain_id,
             report
         )
         session["report_file_path"] = report_path
