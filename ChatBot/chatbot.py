@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timezone
 from google.cloud import storage
 
-from .daily_report import SummarizerAgent
+from .daily_report import DailyReportAgent,SenderType, Message
 
 # Load environment variables
 load_dotenv()
@@ -32,7 +32,8 @@ router = APIRouter()
 active_sessions = {}
 
 # Initialize components
-summarizer_agent = SummarizerAgent(model="gemini-1.5-flash")
+summarizer_agent = SummarizerAgent(model="gpt-4o-mini")
+daily_report_agent = DailyReportAgent(model="gpt-4o-mini")
 
 # Define reports directory paths
 REPORTS_DIR = Path(__file__).parent.parent / "emp_reports"
@@ -343,7 +344,7 @@ async def end_session(request: EndSessionRequest):
             ) for msg in session["messages"]
         ]
         
-        report = SummarizerAgent.generate_daily_report(updated_context, msgs)
+        report = DailyReportAgent.generate_daily_report(updated_context, msgs)
 
         # Save the report to a file
         report_path = save_session_report_to_gcs(

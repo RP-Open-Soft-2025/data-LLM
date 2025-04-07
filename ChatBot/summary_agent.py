@@ -7,10 +7,10 @@ from dotenv import load_dotenv
 
 # Import Agno framework - only Gemini
 from agno.agent import Agent
-from agno.models.google import Gemini
+from agno.models.openai import OpenAIChat
 
 # Import configuration settings
-from .config import MODEL_ID, GEMINI_API_KEY
+from .config import MODEL_ID,OPEN_AI_API_KEY
 
 # Load environment variables from .env file
 load_dotenv()
@@ -40,7 +40,7 @@ class SummarizerAgent:
 
         # Only use Gemini model through Agno
         self.agent = Agent(
-            model=Gemini(id=model, api_key=GEMINI_API_KEY),
+            model=OpenAIChat(id=model, api_key=OPEN_AI_API_KEY),
             markdown=True,
         )
 
