@@ -159,11 +159,11 @@ def initialize_session(chain_id: str, session_id: str, background_tasks: Backgro
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
-def save_counselling_report_to_gcs(chain_id: str, session_id: str, employee_id: str, report: str, escalated: bool):
+def save_counselling_report_to_gcs(chain_id: str, session_id: str, report: str, escalated: bool):
     """Save the counseling report to a Google Cloud Storage bucket."""
     try:
         report_type = "escalated" if escalated else "standard"
-        filename = f"counselling_report_{report_type}_{chain_id}_{session_id}_{employee_id}.md"
+        filename = f"{session_id}.md"
 
         # Compose the content of the report
         content = (
@@ -194,7 +194,7 @@ def save_counselling_report_to_gcs(chain_id: str, session_id: str, employee_id: 
 def save_session_report_to_gcs(session_id: str, employee_id: str, report: str):
     """Save the counseling report to a Google Cloud Storage bucket."""
     try:
-        filename = f"session_report_{session_id}_{employee_id}.md"
+        filename = f"{session_id}.md"
         storage_client = storage.Client()
         bucket = storage_client.bucket(GCS_BUCKET_NAME)
         blob = bucket.blob(filename)
