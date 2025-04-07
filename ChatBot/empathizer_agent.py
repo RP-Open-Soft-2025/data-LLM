@@ -1,24 +1,25 @@
 from agno.agent import Agent
-from agno.models.groq import Groq
+from agno.models.openai import OpenAIChat
 from typing import List, Dict
 import os
 from dotenv import load_dotenv
+from . import config
 
 # Load environment variables from .env file
 load_dotenv()
 
 class EmpathizerAgent:
-    def __init__(self, model_id="llama3-8b-8192"):
+    def __init__(self, model_id=config.MODEL_ID):
         """
         Initialize the empathizer agent with a lightweight model using Groq.
         
         Args:
             model_id: ID of the LLM to use (default: llama3-8b-8192 which is less powerful but fast)
         """
-        self.model_id = model_id
         
         # Get Groq API key
-        groq_api_key = os.getenv("GROQ_API_KEY")
+        api_key = config.OPEN_AI_API_KEY
+        model = OpenAIChat(id=model_id, api_key=api_key)
         
         # Agent description for context
         description = """
@@ -43,9 +44,10 @@ class EmpathizerAgent:
         
         # Create the agent with a lightweight model
         self.agent = Agent(
-            model=Groq(id=model_id, api_key=groq_api_key),
+            model=model,
             description=description,
-            instructions=instructions
+            instructions=instructions,
+            markdown=True,
         )
     
     def generate_empathetic_response(self, conversation_history: List[Dict[str, str]]) -> str:
