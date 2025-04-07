@@ -65,6 +65,8 @@ class MessageRequest(BaseModel):
 
 class MessageResponse(BaseModel):
     message: str
+    complete_the_chain: bool
+    escalate_the_chain: bool
 
 class EndSessionRequest(BaseModel):
     session_id: str
