@@ -278,7 +278,7 @@ class CounselingAgent:
             self.conversation_history.append(
                 {"role": "counselor", "content": response_text}
             )
-            return f"{empathetic_response} {response_text}"
+            return f"{response_text}"
 
         elif end_chat:
             self.is_interview_complete = True

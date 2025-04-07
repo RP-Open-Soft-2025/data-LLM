@@ -296,7 +296,9 @@ EMPLOYEE DATA:
 CONTEXT FROM PREVIOUS SESSIONS (if any):
 {context}
 
-# Your next response as the HR Professional:
+**IMPORTANT**: This message should be very short, 1-2 sentences, please avoid making it like an email.
+
+# Your next very short response as the HR Professional talking to the troubled client:
 
 """
 
