@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 # Import Agno framework - only Gemini
 from agno.agent import Agent
+
 # from agno.models.google import OpenAIChat
 from agno.models.openai import OpenAIChat
 
@@ -15,6 +16,7 @@ from .config import MODEL_ID, OPEN_AI_API_KEY
 
 # Load environment variables from .env file
 load_dotenv()
+
 
 class SenderType(str, Enum):
     BOT = "bot"
@@ -35,12 +37,34 @@ class Message(BaseModel):
 
 class DailyReportAgent:
     def __init__(self, model=MODEL_ID):
-        """Initialize the summarizer agent with Gemini model using Agno framework"""
+        """Initialize the summarizer agent with model using Agno framework"""
         self.model_id = model
 
-        # Only use Gemini model through Agno
+        # Agent description for context
+        self.description = """
+        You are a professional mental health report writer who creates concise, 
+        objective summaries of counseling sessions for HR departments. Your reports 
+        help HR professionals understand employee well-being concerns while maintaining 
+        appropriate confidentiality and professional standards.
+        """
+
+        # Agent instructions for behavior and tone
+        self.instructions = [
+            "Focus on factual information and avoid subjective judgments",
+            "Present employee concerns in a balanced and fair manner",
+            "Highlight key action items and follow-ups needed by HR",
+            "Use professional but empathetic language",
+            "Organize information into clear, structured sections",
+            "Maintain confidentiality while providing necessary context",
+            "Identify patterns or recurring themes in employee concerns",
+            "Flag urgent issues requiring immediate attention",
+        ]
+
+        # Create the agent with description and instructions
         self.agent = Agent(
             model=OpenAIChat(id=model, api_key=OPEN_AI_API_KEY),
+            description=self.description,
+            instructions=self.instructions,
             markdown=True,
         )
         
@@ -50,14 +74,14 @@ class DailyReportAgent:
         self, current_context: str, messages: List[Message]
     ) -> str:
         """
-        Summarize the conversation and create an updated context using the Agno agent with Gemini
+        Summarize the counseling conversation and create a report for HR using the Agno agent
 
         Args:
-            current_context: The existing context string
-            messages: List of Message objects in the conversation
+            current_context: The existing context about the employee
+            messages: List of Message objects in the conversation between employee and counseling bot
 
         Returns:
-            str: An updated context with the conversation summary
+            str: A structured report on the counseling conversation
         """
         # Format messages for the prompt
         formatted_messages = "\n".join(
@@ -67,30 +91,29 @@ class DailyReportAgent:
             ]
         )
 
-        # Create the prompt
+        # Create the prompt with specific guidance for counseling context
         prompt = f"""
-        You are tasked with generating a comprehensive report based on the following:
+        You are tasked with generating a professional counseling summary report based on the following:
 
-        Current Context:
+        Employee Context:
         {current_context}
 
-        Recent Messages:
+        Counseling Session Messages:
         {formatted_messages}
 
-        Please create a detailed report that:
-        1. Summarizes the entire conversation including historical and recent messages
-        2. Clearly identifies key topics discussed and their evolution over time
-        3. Highlights employee concerns, sentiments, motivations, and feedback
-        4. Captures all action items, decisions made, and unresolved issues
-        5. Includes insights into communication dynamics, collaboration patterns, or tensions if any
-        6. Notes any requests, follow-ups, or dependencies that emerged
-        7. Organizes information into clearly labeled sections (e.g., Overview, Key Points, Employee Feedback, Action Items, Unresolved Questions, Recommendations)
-        8. Uses bullet points and subheadings for clarity where appropriate
-        9. Avoids repeating outdated or irrelevant information
-        10. Is objective and professional in tone
+        Please create a detailed counseling report that:
+        1. Summarizes the key points from the counseling conversation
+        2. Identifies main concerns, stressors, or challenges the employee is facing
+        3. Highlights any mental health or well-being issues that should be noted
+        4. Documents any workplace-related issues mentioned (workload, team dynamics, etc.)
+        5. Notes any follow-up actions suggested during the conversation
+        6. Assesses urgency level of concerns (if any require immediate HR attention)
+        7. Organizes information into clearly labeled sections (e.g., Summary, Key Concerns, Recommendations, Follow-up Items)
+        8. Uses professional, objective, and empathetic language
+        9. Remains factual and avoids speculation
+        10. Respects employee confidentiality while providing necessary context for HR
 
-        This report is intended for leadership review or cross-functional team alignment. Ensure completeness and accuracy.
-
+        This report will be reviewed by HR personnel to ensure appropriate support for the employee.
         """
 
         # Use the Agno agent to generate the response
@@ -111,7 +134,7 @@ def test_summarizer():
     Name: John Doe
     Department: Engineering
     Recent performance review: Good teamwork, meeting expectations
-    Issues: Has mentioned feeling overworked during standup meetings
+    Previous counseling notes: Has mentioned feeling overwhelmed and anxious about project deadlines
     """
 
     # Create dummy messages
@@ -121,44 +144,44 @@ def test_summarizer():
                 2025, 4, 1, 14, 30, tzinfo=datetime.timezone.utc
             ),
             sender_type=SenderType.BOT,
-            text="How are you feeling about your workload this week?",
+            text="How have you been managing your stress levels since we last spoke?",
         ),
         Message(
             timestamp=datetime.datetime(
                 2025, 4, 1, 14, 32, tzinfo=datetime.timezone.utc
             ),
             sender_type=SenderType.EMPLOYEE,
-            text="I've been struggling with the tight deadline for Project X. I'm working overtime almost every day.",
+            text="Not great. I've been having trouble sleeping and find myself worrying constantly about Project X deadlines. I'm feeling overwhelmed most days.",
         ),
         Message(
             timestamp=datetime.datetime(
                 2025, 4, 1, 14, 34, tzinfo=datetime.timezone.utc
             ),
             sender_type=SenderType.BOT,
-            text="I understand that must be difficult. Have you spoken to your manager about this?",
+            text="I'm sorry to hear that. Have you been able to use any of the coping strategies we discussed last time?",
         ),
         Message(
             timestamp=datetime.datetime(
                 2025, 4, 1, 14, 36, tzinfo=datetime.timezone.utc
             ),
             sender_type=SenderType.EMPLOYEE,
-            text="Yes, but they said everyone's under pressure to deliver. I'm concerned about burnout.",
+            text="I tried the breathing exercises, but it's hard to find time. My manager keeps adding more tasks and doesn't seem to understand when I say I'm at capacity.",
         ),
         Message(
             timestamp=datetime.datetime(
                 2025, 4, 1, 14, 38, tzinfo=datetime.timezone.utc
             ),
             sender_type=SenderType.HR,
-            text="John, we can schedule a meeting to discuss resource allocation for your team. Would tomorrow at 10am work?",
+            text="John, we appreciate you sharing these concerns. Would you like to schedule a confidential meeting with HR to discuss workload management options?",
         ),
     ]
 
     # Summarize the conversation
     updated_context = summarizer.generate_daily_report(initial_context, messages)
 
-    # print("UPDATED CONTEXT:")
-    # print(updated_context)
-    
+    print("COUNSELING REPORT:")
+    print(updated_context)
+
     # Save the report to a file in the daily_reports folder
     save_to_file(updated_context)
 
@@ -168,28 +191,30 @@ def test_summarizer():
 def save_to_file(report_content):
     """
     Save the report to a file in the daily_reports folder
-    
+
     Args:
         report_content: The report content to save
     """
     # Create daily_reports directory outside the ChatBot folder
-    reports_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "daily_reports")
-    
+    reports_dir = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "daily_reports"
+    )
+
     # Create the directory if it doesn't exist
     if not os.path.exists(reports_dir):
         os.makedirs(reports_dir)
-    
+
     # Create a filename with the current timestamp
-    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"report_{timestamp}.md"
-    
+
     # Complete path to save the file
     file_path = os.path.join(reports_dir, filename)
-    
+
     # Save the report content to the file
-    with open(file_path, 'w') as file:
+    with open(file_path, "w") as file:
         file.write(report_content)
-    
+
     print(f"Report saved to: {file_path}")
 
 

@@ -26,13 +26,6 @@ def save_report_to_text(report: Dict[str, Any], output_file: str) -> None:
             report.get("overall_analysis", "No overall analysis available.") + "\n\n"
         )
 
-        # Timestamp
-        from datetime import datetime
-
-        file.write(
-            f"\nReport generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-        )
-
 
 def format_report_for_display(report: Dict[str, Any]) -> str:
     """Format the consolidated report for human-readable display."""

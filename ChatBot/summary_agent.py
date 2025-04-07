@@ -10,7 +10,7 @@ from agno.agent import Agent
 from agno.models.openai import OpenAIChat
 
 # Import configuration settings
-from .config import MODEL_ID,OPEN_AI_API_KEY
+from .config import MODEL_ID, OPEN_AI_API_KEY
 
 # Load environment variables from .env file
 load_dotenv()
@@ -38,9 +38,23 @@ class SummarizerAgent:
         """Initialize the summarizer agent with Gemini model using Agno framework"""
         self.model_id = model
 
+        # Agent description, instructions and other parameters
+        description = "You are an expert counseling session summarizer who maintains an updated record of all discussions between a counseling bot and a patient."
+
+        instructions = [
+            "Your task is to create a concise yet comprehensive summary of counseling sessions.",
+            "Always include ALL previously discussed topics and issues from the context.",
+            "Add new topics, concerns, and action items from the recent conversation.",
+            "Focus on the patient's emotional state, concerns, and progress.",
+            "Organize the summary in a clear, structured format that's easy to review.",
+            "Maintain a professional, empathetic tone throughout the summary.",
+        ]
+
         # Only use Gemini model through Agno
         self.agent = Agent(
             model=OpenAIChat(id=model, api_key=OPEN_AI_API_KEY),
+            description=description,
+            instructions=instructions,
             markdown=True,
         )
 
@@ -67,21 +81,13 @@ class SummarizerAgent:
 
         # Create the prompt
         prompt = f"""
-        Current Context:
+        Current Context (Contains previously discussed issues and topics):
         {current_context}
         
-        Recent Messages:
+        Recent Conversation:
         {formatted_messages}
         
-        Please summarize these messages and integrate important information into the context.
-        Create a new comprehensive context that:
-        1. Retains key information from the original context
-        2. Integrates important new details from the conversation
-        3. Removes redundant or outdated information
-        4. Focuses on employee concerns, sentiments, and key action items
-        5. Is concise but comprehensive (max 500 words)
-        
-        New Context:
+        Please create an updated comprehensive context that includes ALL topics and issues discussed so far.
         """
 
         # Use the Agno agent to generate the response
