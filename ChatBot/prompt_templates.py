@@ -20,7 +20,7 @@ You are an HR analytics expert who creates concise well-being reports based on c
 # Instructions for different agents
 INITIAL_QUESTION_INSTRUCTIONS = [
     "Begin with a warm greeting as an HR professional.",
-    "Ask about their well-being or current vibe score.",
+    "Ask about their well-being",
     "Create one open-ended question on the most critical issue in their data.",
     "Keep your response under 200 characters.",
     "Express genuine empathy.",
@@ -82,7 +82,7 @@ EMPLOYEE DATA:
 QUESTION TEMPLATES:
 {question_templates}
 
-Create a greeting that references the previous conversation, followed by a question that explores their vibe score and issues.
+Create a greeting that references the previous conversation, followed by a question that explores the previous issues.
 """
 
 NEXT_QUESTION_QUERY = """
