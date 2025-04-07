@@ -7,14 +7,14 @@ from dotenv import load_dotenv
 
 # Import Agno framework - only Gemini
 from agno.agent import Agent
-from agno.models.google import Gemini
+# from agno.models.google import OpenAIChat
+from agno.models.openai import OpenAIChat
 
 # Import configuration settings
-from .config import MODEL_ID, GEMINI_API_KEY
+from config import MODEL_ID, OPEN_AI_API_KEY
 
 # Load environment variables from .env file
 load_dotenv()
-
 
 class SenderType(str, Enum):
     BOT = "bot"
@@ -33,18 +33,18 @@ class Message(BaseModel):
     text: str = Field(..., description="Content of the message")
 
 
-class SummarizerAgent:
+class DailyReportAgent:
     def __init__(self, model=MODEL_ID):
         """Initialize the summarizer agent with Gemini model using Agno framework"""
         self.model_id = model
 
         # Only use Gemini model through Agno
         self.agent = Agent(
-            model=Gemini(id=model, api_key=GEMINI_API_KEY),
+            model=OpenAIChat(id=model, api_key=OPEN_AI_API_KEY),
             markdown=True,
         )
 
-    def summarize_conversation(
+    def generate_daily_report(
         self, current_context: str, messages: List[Message]
     ) -> str:
         """
@@ -101,7 +101,7 @@ class SummarizerAgent:
 # Test function with dummy data
 def test_summarizer():
     # Create a summarizer agent
-    summarizer = SummarizerAgent()
+    summarizer = DailyReportAgent()
 
     # Initial context
     initial_context = """
@@ -152,7 +152,7 @@ def test_summarizer():
     ]
 
     # Summarize the conversation
-    updated_context = summarizer.summarize_conversation(initial_context, messages)
+    updated_context = summarizer.generate_daily_report(initial_context, messages)
 
     print("UPDATED CONTEXT:")
     print(updated_context)
