@@ -52,6 +52,7 @@ class CounselingAgent:
 
         # Set up the model
         api_key = os.getenv("OPENAI_API_KEY")
+        print("API KEY: ", api_key)
         model = OpenAIChat(id=model_id, api_key=api_key)
 
         # Initialize specialized agents for different tasks

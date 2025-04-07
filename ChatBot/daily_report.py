@@ -43,6 +43,8 @@ class DailyReportAgent:
             model=OpenAIChat(id=model, api_key=OPEN_AI_API_KEY),
             markdown=True,
         )
+        
+        # print("Type of agent: ", type(self.agent))
 
     def generate_daily_report(
         self, current_context: str, messages: List[Message]
@@ -93,7 +95,7 @@ class DailyReportAgent:
 
         # Use the Agno agent to generate the response
         response = self.agent.run(prompt)
-
+        
         # Return the response content
         return response.content.strip()
 
@@ -154,8 +156,8 @@ def test_summarizer():
     # Summarize the conversation
     updated_context = summarizer.generate_daily_report(initial_context, messages)
 
-    print("UPDATED CONTEXT:")
-    print(updated_context)
+    # print("UPDATED CONTEXT:")
+    # print(updated_context)
     
     # Save the report to a file in the daily_reports folder
     save_to_file(updated_context)

@@ -161,7 +161,7 @@ def save_counselling_report_to_gcs(employee_id: str, session_id: str, report: st
     """Save the counseling report to a Google Cloud Storage bucket."""
     try:
         report_type = "escalated" if escalated else "standard"
-        filename = f"{employee_id}_{session_id}_{report_type}.md"
+        filename = f"chain_{employee_id}_{session_id}_{report_type}.md"
 
         # Compose the content of the report
         content = (
@@ -192,7 +192,7 @@ def save_counselling_report_to_gcs(employee_id: str, session_id: str, report: st
 def save_session_report_to_gcs(chain_id: str, session_id: str, report: str):
     """Save the counseling report to a Google Cloud Storage bucket."""
     try:
-        filename = f"{chain_id}_{session_id}_report.md"
+        filename = f"session_{chain_id}_{session_id}.md"
         storage_client = storage.Client()
         bucket = storage_client.bucket(GCS_BUCKET_NAME)
         blob = bucket.blob(filename)
@@ -294,6 +294,8 @@ async def process_message(request: MessageRequest):
                 complete_the_chain = True
                 escalate_the_chain = True
         
+        # print("Escalation: ", escalate_the_chain)
+        # print("Completion: ", complete_the_chain)
         return {"message": next_question, "complete_the_chain": complete_the_chain, "escalate_the_chain": escalate_the_chain}
     except Exception as e:
         print(f"Error in process_message: {str(e)}")
@@ -313,13 +315,13 @@ async def end_session(request: EndSessionRequest):
         if not session["end_time"]:
             session["end_time"] = datetime.now()
         
-        print(session)
+        # print(session)
         
         # Get all messages from the session
         messages = []
         for msg in session["messages"]:
-            print(msg)
-            print(msg.keys())
+            # print(msg)
+            # print(msg.keys())
 
             messages.append(Message(
                 sender_type=SenderType.EMPLOYEE if msg["sender"] == "employee" else SenderType.BOT,
@@ -336,15 +338,19 @@ async def end_session(request: EndSessionRequest):
         session["complete"] = True
         session["end_time"] = datetime.now(timezone.utc)
 
+        # print("Session message: ", session["messages"])
+
         msgs = [
             Message(
-                sender_type=SenderType.EMPLOYEE,
-                text=request.message,
-                timestamp=datetime.now(timezone.utc)
+                sender_type=msg['sender'],
+                text=msg['text'],
+                timestamp=msg['timestamp']
             ) for msg in session["messages"]
         ]
         
-        report = DailyReportAgent.generate_daily_report(updated_context, msgs)
+        
+        # print("Updated messages: ", msgs)
+        report = daily_report_agent.generate_daily_report(updated_context, msgs)
 
         # Save the report to a file
         report_path = save_session_report_to_gcs(
