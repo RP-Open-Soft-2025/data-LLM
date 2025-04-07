@@ -18,11 +18,16 @@ from .prompt_templates import (
     CONTEXT_QUESTION_QUERY,
     NEXT_QUESTION_QUERY,
     REPORT_GENERATION_QUERY,
+    CONTINUE_TOPIC_PROMPT,
+    CHANGE_TOPIC_PROMPT,
+    END_CHAT_PROMPT,
+    ESCALATION_PROMPT,
 )
 from dotenv import load_dotenv
 import os
 from . import config
 from .empathizer_agent import EmpathizerAgent
+from .chat_decision_maker import ChatDecisionMaker
 
 load_dotenv()
 
@@ -89,8 +94,48 @@ class CounselingAgent:
             markdown=True,
         )
 
+        # Initialize specialized agents for specific conversation tasks
+        self.continue_topic_agent = Agent(
+            model=model,
+            description="Expert at exploring topics deeply in counseling conversations",
+            instructions=[
+                "Create follow-up questions that deepen understanding while showing empathy"],
+            tools=[ThinkingTools()],
+            markdown=True,
+        )
+
+        self.change_topic_agent = Agent(
+            model=model,
+            description="Expert at smoothly transitioning between topics in counseling",
+            instructions=[
+                "Create transition questions that acknowledge previous topics while introducing new ones"],
+            tools=[ThinkingTools()],
+            markdown=True,
+        )
+
+        self.end_chat_agent = Agent(
+            model=model,
+            description="Expert at closing counseling conversations meaningfully",
+            instructions=[
+                "Create closing messages that summarize, acknowledge progress, and offer support"],
+            tools=[ThinkingTools()],
+            markdown=True,
+        )
+
+        self.escalation_agent = Agent(
+            model=model,
+            description="Expert at handling sensitive HR escalations",
+            instructions=[
+                "Create messages that show concern while explaining the need for additional support"],
+            tools=[ThinkingTools()],
+            markdown=True,
+        )
+
         # Initialize the empathizer agent with a lightweight model
         self.empathizer_agent = EmpathizerAgent()
+
+        # Initialize the decision maker agent
+        self.decision_maker = ChatDecisionMaker(model_id)
 
         # Prepare employee data
         if report_file_path:
@@ -111,6 +156,9 @@ class CounselingAgent:
             search_query, num_documents=1
         )
 
+        self.current_topic = None
+        self.explored_topics = set()
+        self.remaining_topics = set()
         self.conversation_history = []
         self.is_interview_complete = False
         self.is_escalated_to_hr = False
@@ -201,48 +249,106 @@ class CounselingAgent:
             ]
         )
 
-        # # Generate empathetic response using the empathizer agent
+        # Generate empathetic response using the empathizer agent
         empathetic_response = self.empathizer_agent.generate_empathetic_response(
             self.conversation_history
         )
 
-        # Create the query for next question generation
-        query = NEXT_QUESTION_QUERY.format(
-            conversation_history=history_text,
-            employee_data=self.employee_data,
-            question_templates=self.question_templates,
-            context=self.context,
-            empathetic_response=empathetic_response,
+        # Use the decision maker to determine next steps
+        change_topic, escalate_to_hr, end_chat = self.decision_maker.make_decision(
+            self.conversation_history,
+            self.employee_data,
+            self.context
         )
 
-        # Generate the next question using the next_question_agent
-        response = self.next_question_agent.run(query)
-        response_text = self._get_response_text(response)
-
-        if response_text.startswith('"COMPLETE:') or response_text.startswith(
-            "COMPLETE:"
-        ):
-            self.is_interview_complete = True
-            return None
-        elif response_text.startswith('"ESCALATED_TO_HR:') or response_text.startswith(
-            "ESCALATED_TO_HR:"
-        ):
+        # Handle decisions based on the decision maker's output
+        if escalate_to_hr:
             self.is_interview_complete = True
             self.is_escalated_to_hr = True
-            return None
-        elif response_text.startswith("CONTINUE:"):
-            next_question = response_text.replace("CONTINUE:", "").strip()
-            self.conversation_history.append(
-                {"role": "counselor", "content": next_question}
+
+            # Generate escalation message with properly formatted prompt
+            escalation_query = ESCALATION_PROMPT.format(
+                conversation_history=history_text,
+                employee_data=self.employee_data,
+                context=self.context
             )
-            return next_question
-        else:
-            # If the model doesn't follow the format, extract the likely question
+            response = self.escalation_agent.run(escalation_query)
+            response_text = self._get_response_text(response)
+
+            self.conversation_history.append(
+                {"role": "counselor", "content": response_text}
+            )
+            return f"{empathetic_response} {response_text}"
+
+        elif end_chat:
+            self.is_interview_complete = True
+
+            # Generate closing message with properly formatted prompt including empathetic_response
+            end_chat_query = END_CHAT_PROMPT.format(
+                conversation_history=history_text,
+                employee_data=self.employee_data,
+                context=self.context,
+                # empathetic_response=empathetic_response
+            )
+            response = self.end_chat_agent.run(end_chat_query)
+            response_text = self._get_response_text(response)
+
+            self.conversation_history.append(
+                {"role": "counselor", "content": response_text}
+            )
+            return f"{empathetic_response} {response_text}"
+
+        elif change_topic:
+            # Extract current and potential next topics from employee data
+            if not self.current_topic:
+                self.current_topic = "general well-being"  # Default initial topic
+
+            # Update the change_topic_agent instructions to use NEXT_QUESTION_INSTRUCTIONS
+            self.change_topic_agent.instructions = NEXT_QUESTION_INSTRUCTIONS
+
+            # Generate a question that changes the topic with properly formatted prompt including empathetic_response
+            change_topic_query = CHANGE_TOPIC_PROMPT.format(
+                conversation_history=history_text,
+                employee_data=self.employee_data,
+                context=self.context,
+                question_templates=self.question_templates,
+                previous_topic=self.current_topic,
+                next_topic="another aspect of your experience",
+                empathetic_response=empathetic_response
+            )
+
+            response = self.change_topic_agent.run(change_topic_query)
+            response_text = self._get_response_text(response)
             next_question = self._extract_question(response_text)
-            self.conversation_history.append(
-                {"role": "counselor", "content": next_question}
+
+            # Update current topic - in practice, you'd extract this from the new question
+            self.explored_topics.add(self.current_topic)
+            self.current_topic = "new topic"  # This would be more specific in practice
+
+        else:
+            # Update the continue_topic_agent instructions to use NEXT_QUESTION_INSTRUCTIONS
+            self.continue_topic_agent.instructions = NEXT_QUESTION_INSTRUCTIONS
+
+            # Continue with the current topic with properly formatted prompt including empathetic_response
+            continue_topic_query = CONTINUE_TOPIC_PROMPT.format(
+                conversation_history=history_text,
+                employee_data=self.employee_data,
+                context=self.context,
+                current_topic=self.current_topic if self.current_topic else "general well-being",
+                empathetic_response=empathetic_response
             )
-            return "{empathetic_response} {next_question}".format(empathetic_response = empathetic_response, next_question = next_question)
+
+            response = self.continue_topic_agent.run(continue_topic_query)
+            response_text = self._get_response_text(response)
+            next_question = self._extract_question(response_text)
+
+        # Add the new question to conversation history
+        self.conversation_history.append(
+            {"role": "counselor", "content": next_question}
+        )
+
+        # Return the next question (empathetic response already included in the templates)
+        return f"{empathetic_response} {response_text}"
 
     def _extract_question(self, text):
         """Extract the question from the model response"""

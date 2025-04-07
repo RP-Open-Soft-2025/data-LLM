@@ -30,7 +30,7 @@ class EmpathizerAgent:
         
         # Instructions for the agent
         instructions = [
-            "Generate short, empathetic responses (1-2 sentences only)",
+            "Generate short, empathetic responses (1 sentence only)",
             "Acknowledge the emotions expressed by the employee in their recent messages",
             "Provide ONLY the actual text you would say to the employee without any metadata.",
             "Do NOT include any surrounding punctuation or formatting (e.g. NO surrounding inverted commas)",
@@ -77,7 +77,8 @@ class EmpathizerAgent:
         
         {' '.join(recent_messages)}
         
-        Generate a very brief empathetic response (1-2 sentences) that acknowledges their feelings
+        Just focus on the last message.
+        Generate a very brief empathetic response (1 sentence) that acknowledges their feelings
         and creates a safe space. Your response should be warm and supportive, showing that you 
         understand what they're experiencing.
         
