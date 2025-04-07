@@ -100,7 +100,7 @@ class CounselingAgent:
         Summary of chat history of an employee's counselling sessions (note that this can be empty):
         {context}
 
-        The most appropriate questions to ask the given employee based on the context:
+        Please find questions that are not covered with reference to the above context
         """
         self.question_templates = self.kb_manager.retrieve_from_questions(
             search_query, num_documents=1

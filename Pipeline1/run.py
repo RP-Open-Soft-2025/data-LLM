@@ -85,11 +85,6 @@ def save_report_to_text(report: dict, output_file: str) -> None:
         #     file.write("No emotional state analysis available.\n\n")
 
         # Timestamp
-        from datetime import datetime
-
-        file.write(
-            f"\nReport generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-        )
 
 
 def main():
