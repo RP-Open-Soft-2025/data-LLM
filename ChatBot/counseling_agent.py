@@ -4,7 +4,7 @@ import re
 from agno.models.google import Gemini
 from agno.models.openai import OpenAIChat
 from agno.tools.thinking import ThinkingTools
-from .prompt_templates1 import (
+from .prompt_templates import (
     INITIAL_QUESTION_DESCRIPTION,
     CONTEXT_QUESTION_DESCRIPTION,
     NEXT_QUESTION_DESCRIPTION,
