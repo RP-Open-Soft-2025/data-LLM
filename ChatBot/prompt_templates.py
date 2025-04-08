@@ -196,10 +196,10 @@ CONTEXT FROM PREVIOUS SESSIONS (if any):
 Make decisions on:
 
 1. CHANGE TOPIC: Should we change to a new topic?
-   - Analyze if the current topic has been thoroughly explored
-   - Check if employee responses are becoming repetitive or resolved
-   - If employee is reluctant to discuss the current topic, change it
-   - Determine if a new issue needs attention
+   - Analyze if the current topic has been explored to some extent, if so, change the topic
+   - Check if employee responses are becoming repetitive or resolved, if so, change the topic
+   - If employee is reluctant to discuss the current topic, change the topic
+   - If the employee seems to feel even slightly positive about the current topic at any moment, then change the topic
 
 2. END CHAT: Should the conversation be concluded?
    - Verify if all key issues from employee data have been explored a little
@@ -216,7 +216,9 @@ Make decisions on:
 
 Provide your analysis and reasoning, then conclude with a formal decision in this format:
 DECISION: change_topic=True/False, escalate_to_hr=True/False, end_chat=True/False
-"""
+
+# Your decision:
+DECISION: """
 
 # Topic-specific follow-up prompts
 CONTINUE_TOPIC_PROMPT = """
@@ -236,8 +238,6 @@ CONTEXT FROM PREVIOUS SESSIONS (if any):
 {context}
 
 Current topic being discussed: {current_topic}
-
-Empathetic response to the previous topic: {empathetic_response}
 
 **IMPORTANT**: Please don't repeat the empathetic response. Your response continues the message after the empathetic response.
 
