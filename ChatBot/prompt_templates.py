@@ -183,7 +183,6 @@ Make decisions on:
    - Check for expressions of harm to self or others
    - Don't escalate minor issues or general dissatisfaction
    - Identify if the employee is in immediate danger or needs urgent support, escalate ONLY if not doing so might cause harm
-   - Identify major workplace violations that needs immediate attention
 
 Provide your analysis and reasoning, then conclude with a formal decision in this format:
 DECISION: change_topic=True/False, escalate_to_hr=True/False, end_chat=True/False
