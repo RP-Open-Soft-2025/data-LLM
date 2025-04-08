@@ -50,6 +50,7 @@ INITIAL_QUESTION_INSTRUCTIONS = [
     "Create one open-ended question focused on the most critical issue identified in their data.",
     "Keep your response under 200 characters.",
     "Provide ONLY the exact text of your greeting and question without any metadata or explanations.",
+    "Only keep the intent of finding out the reason of vibe score. Don't directly ask about it.",
 ]
 
 CONTEXT_QUESTION_INSTRUCTIONS = [
@@ -62,6 +63,7 @@ CONTEXT_QUESTION_INSTRUCTIONS = [
 ]
 
 NEXT_QUESTION_INSTRUCTIONS = [
+    "Only keep the intent of finding out the reason of vibe score. Don't directly ask about it.",
     "Analyze the conversation history to identify the current topic being discussed and track which issues have been explored.",
     "Monitor the employee's sentiment in responses - if positive/polite responses are detected, move to the next issue.",
     "If negative/distressed responses are detected, continue exploring the current issue more deeply.",
@@ -196,17 +198,21 @@ Make decisions on:
 1. CHANGE TOPIC: Should we change to a new topic?
    - Analyze if the current topic has been thoroughly explored
    - Check if employee responses are becoming repetitive or resolved
+   - If employee is reluctant to discuss the current topic, change it
    - Determine if a new issue needs attention
 
-2. ESCALATE TO HR: Does this conversation require immediate HR intervention?
+2. END CHAT: Should the conversation be concluded?
+   - Verify if all key issues from employee data have been explored a little
+   - Check if the conversation has reached a natural conclusion
+   - If the user doesn't want to chat anymore, then end the chat (e.g. meeting is coming up)
+   - Determine if sufficient information has been gathered
+
+3. ESCALATE TO HR: Does this conversation require immediate HR intervention?
    - Look for signs of serious mental health issues, threats, or policy violations
    - Check for expressions of harm to self or others
-   - Identify major workplace violations that need immediate attention
-
-3. END CHAT: Should the conversation be concluded?
-   - Verify if all key issues from employee data have been explored
-   - Check if the conversation has reached a natural conclusion
-   - Determine if sufficient information has been gathered
+   - Don't escalate minor issues or general dissatisfaction
+   - Identify if the employee is in immediate danger or needs urgent support, escalate ONLY if not doing so might cause harm
+   - Identify major workplace violations that needs immediate attention
 
 Provide your analysis and reasoning, then conclude with a formal decision in this format:
 DECISION: change_topic=True/False, escalate_to_hr=True/False, end_chat=True/False
@@ -218,7 +224,7 @@ You've identified that the current topic requires further exploration. Review th
 1. Acknowledges what the employee just shared
 2. Deepens understanding of the current issue
 3. Shows empathy and creates a safe space for sharing
-4. Avoids repetition of previous questions
+4. NEVER ask a question that is similar to a previous question
 
 CONVERSATION HISTORY:
 {conversation_history}
@@ -231,8 +237,12 @@ CONTEXT FROM PREVIOUS SESSIONS (if any):
 
 Current topic being discussed: {current_topic}
 
+Empathetic response to the previous topic: {empathetic_response}
+
+**IMPORTANT**: Please don't repeat the empathetic response. Your response continues the message after the empathetic response.
+
 # Your next response as the empathetic, supportive HR professional:
-{empathetic_response} """
+"""
 
 CHANGE_TOPIC_PROMPT = """
 You've identified that it's time to explore a new topic. Review the conversation history and employee data to create a transition question that:
@@ -256,9 +266,13 @@ QUESTION TEMPLATES:
 Previous topic: {previous_topic}
 New topic to explore: {next_topic}
 
+Empathetic response to the previous topic: {empathetic_response}
+
+**IMPORTANT**: Please don't repeat the empathetic response. Your response continues the message after the empathetic response.
+
 # Your next response as the empathetic, supportive HR professional:
 
-{empathetic_response} """
+"""
 
 END_CHAT_PROMPT = """
 You've identified that the counseling session should conclude. Review the conversation history and context to create a closing message that:

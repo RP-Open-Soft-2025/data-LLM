@@ -265,38 +265,11 @@ class CounselingAgent:
         if escalate_to_hr:
             self.is_interview_complete = True
             self.is_escalated_to_hr = True
-
-            # Generate escalation message with properly formatted prompt
-            escalation_query = ESCALATION_PROMPT.format(
-                conversation_history=history_text,
-                employee_data=self.employee_data,
-                context=self.context
-            )
-            response = self.escalation_agent.run(escalation_query)
-            response_text = self._get_response_text(response)
-
-            self.conversation_history.append(
-                {"role": "counselor", "content": response_text}
-            )
-            return f"{response_text}"
+            return None
 
         elif end_chat:
             self.is_interview_complete = True
-
-            # Generate closing message with properly formatted prompt including empathetic_response
-            end_chat_query = END_CHAT_PROMPT.format(
-                conversation_history=history_text,
-                employee_data=self.employee_data,
-                context=self.context,
-                # empathetic_response=empathetic_response
-            )
-            response = self.end_chat_agent.run(end_chat_query)
-            response_text = self._get_response_text(response)
-
-            self.conversation_history.append(
-                {"role": "counselor", "content": response_text}
-            )
-            return f"{empathetic_response} {response_text}"
+            return None
 
         elif change_topic:
             # Extract current and potential next topics from employee data
