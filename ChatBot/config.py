@@ -12,7 +12,7 @@ OPEN_AI_API_KEY = os.getenv("OPENAI_API_KEY")  # Load from environment variable
 
 # Model settings
 # MODEL_ID = "gemini-1.5-flash"  # Updated to use Gemini model
-MODEL_ID = "gpt-4o-mini"  # Updated to use Gemini model
+MODEL_ID = "gpt-4o"  # Updated to use Gemini model
 
 # File paths
 EMPLOYEE_DATA_PATH = (
